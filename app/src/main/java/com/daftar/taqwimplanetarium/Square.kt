@@ -5,11 +5,7 @@ import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.nio.ShortBuffer
 
-var triangleCoords = floatArrayOf(     // in counterclockwise order:
-        0.0f, 0.622008459f, 0.0f,      // top
-        -0.5f, -0.311004243f, 0.0f,    // bottom left
-        0.5f, -0.311004243f, 0.0f      // bottom right
-)
+
 
 // number of coordinates per vertex in this array
 var squareCoords = floatArrayOf(

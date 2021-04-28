@@ -2,16 +2,16 @@ package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
+import android.opengl.GLES20.GL_FLOAT
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import kotlin.math.*
 
-class Triangle {
-    var triangleCoords = floatArrayOf(     // in counterclockwise order:
-            -0.5f, 0.5f, 0.0f,      // top
-            0.5f, 0.5f, 0.0f,    // bottom left
-            0.5f, -0.5f, 0.0f      // bottom right
-    )
+class SkyGrid {
+    private var vertexCount: Int = 0
+    private var vertexBuffer: FloatBuffer
+    val stp=10
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -66,30 +66,62 @@ class Triangle {
             // creates OpenGL ES program executables
             GLES20.glLinkProgram(it)
         }
+
+        var triangleCoords: MutableList<Float> = mutableListOf();
+
+        for (b in 0..90 step stp)
+        for (a in 0..360 step stp)
+        {
+            val r=b/100.0f
+            val rN=(b+stp)/100.0f
+
+            val alpha=Math.PI* a/180.0
+            val x=r*cos(alpha).toFloat()
+            val y=r*sin(alpha).toFloat()
+            val p1=arrayOf(x,y,0.0f)
+
+            val alpha2=Math.PI* (a+stp)/180.0
+            val x2=r*cos(alpha2).toFloat()
+            val y2=r*sin(alpha2).toFloat()
+            val p2=arrayOf(x2,y2,0.0f)
+
+            val xn=rN*cos(alpha).toFloat()
+            val yn=rN*sin(alpha).toFloat()
+            val pNextRing=arrayOf(xn,yn,0.0f)
+
+            // horizontal
+            triangleCoords.addAll(p1)
+            triangleCoords.addAll(p2)
+
+            // vertical
+            triangleCoords.addAll(p1)
+            triangleCoords.addAll(pNextRing)
+        }
+
+        vertexCount = triangleCoords.size / COORDS_PER_VERTEX;
+        vertexBuffer =
+                // (number of coordinate values * 4 bytes per float)
+                ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
+                    // use the device hardware's native byte order
+                    order(ByteOrder.nativeOrder())
+
+                    // create a floating point buffer from the ByteBuffer
+                    asFloatBuffer().apply {
+                        // add the coordinates to the FloatBuffer
+                        put(triangleCoords.toFloatArray())
+                        // set the buffer to read the first coordinate
+                        position(0)
+                    }
+                }
     }
 
     // Set color with red, green, blue and alpha (opacity) values
     val color = floatArrayOf(0.13671875f, 0.76953125f, 0.22265625f, 1.0f)
 
-    private var vertexBuffer: FloatBuffer =
-            // (number of coordinate values * 4 bytes per float)
-            ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
-                // use the device hardware's native byte order
-                order(ByteOrder.nativeOrder())
-
-                // create a floating point buffer from the ByteBuffer
-                asFloatBuffer().apply {
-                    // add the coordinates to the FloatBuffer
-                    put(triangleCoords)
-                    // set the buffer to read the first coordinate
-                    position(0)
-                }
-            }
 
     private var positionHandle: Int = 0
     private var mColorHandle: Int = 0
 
-    private val vertexCount: Int = triangleCoords.size / COORDS_PER_VERTEX
     private val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
     fun draw(mvpMatrix: FloatArray) {
@@ -127,7 +159,8 @@ class Triangle {
             }
 
             // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
+            GLES20.glDrawArrays(GLES20.GL_LINES, 0, vertexCount)
+
 
             // Disable vertex array
             GLES20.glDisableVertexAttribArray(it)

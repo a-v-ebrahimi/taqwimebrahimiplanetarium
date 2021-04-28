@@ -5,6 +5,7 @@ import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
+import com.daftar.taqwimplanetarium.SkyGrid
 import com.daftar.taqwimplanetarium.Square
 import com.daftar.taqwimplanetarium.Triangle
 
@@ -16,6 +17,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
     private lateinit var mTriangle: Triangle
     private lateinit var mSquare: Square
+    private lateinit var mSkyGrid:SkyGrid
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
@@ -24,6 +26,8 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         mTriangle = Triangle()
         // initialize a square
         mSquare = Square()
+
+        mSkyGrid = SkyGrid()
     }
 
     private val rotationMatrix = FloatArray(16)
@@ -41,7 +45,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
         // Create a rotation transformation for the triangle
         val time = SystemClock.uptimeMillis() % 4000L
-        val angle = 0.090f * time.toInt()
+        val angle = 0*0.090f * time.toInt()
         Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, -1.0f)
 
         // Combine the rotation matrix with the projection and camera view
@@ -50,7 +54,9 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         Matrix.multiplyMM(scratch, 0, vPMatrix, 0, rotationMatrix, 0)
 
         // Draw triangle
-        mTriangle.draw(scratch)
+//        mTriangle.draw(scratch)
+
+        mSkyGrid.draw(scratch)
     }
 
     // vPMatrix is an abbreviation for "Model View Projection Matrix"
