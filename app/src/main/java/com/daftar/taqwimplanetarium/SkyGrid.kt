@@ -69,25 +69,32 @@ class SkyGrid {
 
         var triangleCoords: MutableList<Float> = mutableListOf();
 
+        val sphereR = 1.0f
         for (b in 0..90 step stp)
         for (a in 0..360 step stp)
         {
-            val r=b/100.0f
-            val rN=(b+stp)/100.0f
+            val alphaV=Math.PI* b/180.0f
+            val alphaVN=Math.PI* (b+stp)/180.0f
+
+            val r=sphereR* cos(alphaV).toFloat()
+            val rN=sphereR*cos(alphaVN).toFloat()
+
+            val z=sphereR*sin(alphaV).toFloat()
+            val zN=sphereR*sin(alphaVN).toFloat()
 
             val alpha=Math.PI* a/180.0
             val x=r*cos(alpha).toFloat()
             val y=r*sin(alpha).toFloat()
-            val p1=arrayOf(x,y,0.0f)
+            val p1=arrayOf(x,y,z)
 
             val alpha2=Math.PI* (a+stp)/180.0
             val x2=r*cos(alpha2).toFloat()
             val y2=r*sin(alpha2).toFloat()
-            val p2=arrayOf(x2,y2,0.0f)
+            val p2=arrayOf(x2,y2,z)
 
             val xn=rN*cos(alpha).toFloat()
             val yn=rN*sin(alpha).toFloat()
-            val pNextRing=arrayOf(xn,yn,0.0f)
+            val pNextRing=arrayOf(xn,yn,zN)
 
             // horizontal
             triangleCoords.addAll(p1)
