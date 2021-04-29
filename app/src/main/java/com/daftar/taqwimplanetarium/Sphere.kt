@@ -2,12 +2,15 @@ package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
-class Sphere(sphereX: Float, sphereY: Float, sphereZ: Float, sphereR: Float,
+class Sphere(spaceX: Float, spaceY: Float, spaceZ: Float, spaceR: Float,
+             azimuth: Float, altitude: Float,
+             sphereR: Float,
              private val sphereColor: FloatArray) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
@@ -68,6 +71,11 @@ class Sphere(sphereX: Float, sphereY: Float, sphereZ: Float, sphereR: Float,
         }
 
         var triangleCoords: MutableList<Float> = mutableListOf();
+
+        val localR = spaceR * cos(altitude)
+        val sphereX = spaceX + localR * cos(azimuth).toFloat()
+        val sphereY = spaceY + localR * sin(azimuth).toFloat()
+        val sphereZ = spaceZ + spaceR * sin(altitude).toFloat()
 
         for (b in -90..90 step stp)
             for (a in 0..360 step stp) {

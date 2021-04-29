@@ -20,6 +20,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
     private lateinit var mSquare: Square
     private lateinit var mSkyGrid: SkyGrid
     private lateinit var mSun: Sphere
+    private lateinit var mMoon: Sphere
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
@@ -29,10 +30,22 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         // initialize a square
         mSquare = Square()
 
-        mSkyGrid = SkyGrid()
+        val skyRadius = 1f
+        mSkyGrid = SkyGrid(skyRadius)
 
-        mSun = Sphere(0f, 1f, 0.5f, 0.1f,
+        val sunAzimuth = (Math.PI / 2f).toFloat()
+        val sunAltitude = (Math.PI / 4f).toFloat()
+        val sunR = 0.1f
+        mSun = Sphere(0f, 0f, 0.0f, skyRadius,
+                sunAzimuth, sunAltitude, sunR,
                 floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
+
+        val moonAzimuth = (0.5f + Math.PI / 2f).toFloat()
+        val moonAltitude = (-0.2f + Math.PI / 4f).toFloat()
+        val moonR = 0.5f * sunR
+        mMoon = Sphere(0f, 0f, 0.0f, skyRadius,
+                moonAzimuth, moonAltitude, moonR,
+                floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
     }
 
     private val rotationMatrix = FloatArray(16)
@@ -57,8 +70,6 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         Matrix.setIdentityM(rotationMatrix, 0)
         Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, angle)
 
-        Matrix.setIdentityM(translationMatrix, 0)
-        Matrix.translateM(translationMatrix, 0, 0f, 0f, -1f)
 
         // Combine the rotation matrix with the projection and camera view
         // Note that the vPMatrix factor *must be first* in order
@@ -71,6 +82,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
         mSkyGrid.draw(scratch)
         mSun.draw(scratch)
+        mMoon.draw(scratch)
     }
 
     // vPMatrix is an abbreviation for "Model View Projection Matrix"
@@ -86,6 +98,6 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
         var b = -0.5f
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, b, b + 2f, 1f, 5f)
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, b, b + 2f, 0.8f, 14f)
     }
 }

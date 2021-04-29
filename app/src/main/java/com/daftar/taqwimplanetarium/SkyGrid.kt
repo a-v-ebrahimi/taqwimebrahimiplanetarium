@@ -2,16 +2,16 @@ package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
-import android.opengl.GLES20.GL_FLOAT
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
-class SkyGrid {
+class SkyGrid(skyRadius: Float) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
-    val stp=10
+    val stp = 10
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -69,28 +69,26 @@ class SkyGrid {
 
         var triangleCoords: MutableList<Float> = mutableListOf();
 
-        val sphereR = 1.0f
         for (b in 0..90 step stp)
-        for (a in 0..360 step stp)
-        {
-            val alphaV=Math.PI* b/180.0f
-            val alphaVN=Math.PI* (b+stp)/180.0f
+        for (a in 0..360 step stp) {
+            val alphaV = Math.PI * b / 180.0f
+            val alphaVN = Math.PI * (b + stp) / 180.0f
 
-            val r=sphereR* cos(alphaV).toFloat()
-            val rN=sphereR*cos(alphaVN).toFloat()
+            val r = skyRadius * cos(alphaV).toFloat()
+            val rN = skyRadius * cos(alphaVN).toFloat()
 
-            val z=sphereR*sin(alphaV).toFloat()
-            val zN=sphereR*sin(alphaVN).toFloat()
+            val z = skyRadius * sin(alphaV).toFloat()
+            val zN = skyRadius * sin(alphaVN).toFloat()
 
-            val alpha=Math.PI* a/180.0
-            val x=r*cos(alpha).toFloat()
-            val y=r*sin(alpha).toFloat()
-            val p1=arrayOf(x,y,z)
+            val alpha = Math.PI * a / 180.0
+            val x = r * cos(alpha).toFloat()
+            val y = r * sin(alpha).toFloat()
+            val p1 = arrayOf(x, y, z)
 
-            val alpha2=Math.PI* (a+stp)/180.0
-            val x2=r*cos(alpha2).toFloat()
-            val y2=r*sin(alpha2).toFloat()
-            val p2=arrayOf(x2,y2,z)
+            val alpha2 = Math.PI * (a + stp) / 180.0
+            val x2 = r * cos(alpha2).toFloat()
+            val y2 = r * sin(alpha2).toFloat()
+            val p2 = arrayOf(x2, y2, z)
 
             val xn=rN*cos(alpha).toFloat()
             val yn=rN*sin(alpha).toFloat()
