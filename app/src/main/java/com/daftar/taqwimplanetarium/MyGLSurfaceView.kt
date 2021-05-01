@@ -1,8 +1,14 @@
 import android.content.Context
+import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.view.MotionEvent
-import kotlin.math.min
+import android.view.ScaleGestureDetector
+import android.view.ScaleGestureDetector.OnScaleGestureListener
+import java.nio.ByteBuffer
 import kotlin.math.max
+import kotlin.math.min
+
 
 private const val TOUCH_SCALE_FACTOR: Float = 1.0f / 320f
 
@@ -24,7 +30,38 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
     private var previousX: Float = 0f
     private var previousY: Float = 0f
 
+    class ScaleDetectorListener(val myGLSurfaceView: MyGLSurfaceView, val renderer: MyGLRenderer) : OnScaleGestureListener {
+        private var sizeCoef: Float = 1f
+        var scaleFocusX = 0f
+        var scaleFocusY = 0f
+        override fun onScale(arg0: ScaleGestureDetector): Boolean {
+            val scale: Float = arg0.scaleFactor * sizeCoef
+            sizeCoef = scale
+            renderer.zoom = 1 / scale;
+            myGLSurfaceView.requestRender()
+            return true
+        }
+
+        override fun onScaleBegin(arg0: ScaleGestureDetector): Boolean {
+            myGLSurfaceView.invalidate()
+            scaleFocusX = arg0.focusX
+            scaleFocusY = arg0.focusY
+            return true
+        }
+
+        override fun onScaleEnd(arg0: ScaleGestureDetector) {
+            scaleFocusX = 0f
+            scaleFocusY = 0f
+        }
+    }
+
+    var mDetector = ScaleGestureDetector(getContext(),
+            ScaleDetectorListener(this, renderer))
+
     override fun onTouchEvent(e: MotionEvent): Boolean {
+        if (mDetector.onTouchEvent(e)) {
+//            return true;
+        }
         // MotionEvent reports input details from the touch screen
         // and other input controls. In this case, you are only
         // interested in events where the touch position changed.
@@ -33,25 +70,35 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
         val y: Float = e.y
 
         when (e.action) {
+            MotionEvent.ACTION_DOWN -> {
+                val buffer: ByteBuffer = ByteBuffer.allocate(4) // 4 = (1 width) * (1 height) * (4 as per RGBA)
+
+                GLES20.glReadPixels(x.toInt(), y.toInt(), 1, 1, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer)
+                Log.d("tqpt", String.format("%d", buffer[3]));
+            }
             MotionEvent.ACTION_MOVE -> {
 
                 var dx: Float = x - previousX
                 var dy: Float = y - previousY
 
-                // reverse direction of rotation above the mid-line
-                if (y > height / 2) {
-                    dx *= -1
+
+                if (e.pointerCount == 1) {
+                    // reverse direction of rotation above the mid-line
+                    if (y > height / 2) {
+                        dx *= -1
+                    }
+
+                    // reverse direction of rotation to left of the mid-line
+                    if (x < width / 2) {
+                        dy *= -1
+                    }
+
+                    renderer.panAzimuth -= dx * TOUCH_SCALE_FACTOR
+                    renderer.panAltitude += dy * TOUCH_SCALE_FACTOR
+
+                    renderer.panAltitude = max(0f, min(renderer.panAltitude, (Math.PI / 2).toFloat()))
+                } else if (e.pointerCount == 2) {
                 }
-
-                // reverse direction of rotation to left of the mid-line
-                if (x < width / 2) {
-                    dy *= -1
-                }
-
-                renderer.panAzimuth -= dx * TOUCH_SCALE_FACTOR
-                renderer.panAltitude += dy * TOUCH_SCALE_FACTOR
-
-                renderer.panAltitude = max(0f, min(renderer.panAltitude, (Math.PI / 2).toFloat()))
                 requestRender()
             }
         }
@@ -60,4 +107,5 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
         previousY = y
         return true
     }
+
 }

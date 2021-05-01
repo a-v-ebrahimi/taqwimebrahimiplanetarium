@@ -18,6 +18,8 @@ const val COORDS_PER_VERTEX = 3
 
 class MyGLRenderer : GLSurfaceView.Renderer {
 
+    private var width: Int = 100
+    private var height: Int = 100
     private lateinit var mTriangle: Triangle
     private lateinit var mSquare: Square
     private lateinit var mSkyGrid: SkyGrid
@@ -26,8 +28,14 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
     @Volatile
     var panAzimuth: Float = 0f
-
     var panAltitude: Float = 0f
+    var zoom: Float = 1f
+        set(value) {
+            field = value
+            updateViewport(this.width, this.height)
+        }
+
+
     val skyRadius = 1f
 
 
@@ -107,10 +115,15 @@ class MyGLRenderer : GLSurfaceView.Renderer {
     private val viewMatrix = FloatArray(16)
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
+        this.width = width
+        this.height = height
+        updateViewport(width, height)
+    }
+
+    fun updateViewport(width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
 
-        val scale = 0.6f
-        val ratio: Float = scale * width.toFloat() / height.toFloat()
+        val ratio: Float = zoom * width.toFloat() / height.toFloat()
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
@@ -118,8 +131,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
         var b = -0.1f
         Matrix.frustumM(projectionMatrix, 0,
-                -ratio, ratio, scale * b, scale * (b + 2f), 0.8f, 14f)
-
-
+                -ratio, ratio, zoom * b, zoom * (b + 2f), 0.8f, 14f)
     }
+
 }
