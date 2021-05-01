@@ -52,20 +52,19 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         val sunAzimuth = (Math.PI / 2f).toFloat()
         val sunAltitude = (Math.PI / 4f).toFloat()
         val sunR = 0.1f
-        mSun = Sphere(0f, 0f, 0.0f, skyRadius,
+        mSun = Sphere("sun", 0f, 0f, 0.0f, skyRadius,
                 sunAzimuth, sunAltitude, sunR,
                 floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
 
         val moonAzimuth = (0.5f + Math.PI / 2f).toFloat()
         val moonAltitude = (-0.2f + Math.PI / 4f).toFloat()
         val moonR = 0.5f * sunR
-        mMoon = Sphere(0f, 0f, 0.0f, skyRadius,
+        mMoon = Sphere("moon", 0f, 0f, 0.0f, skyRadius,
                 moonAzimuth, moonAltitude, moonR,
                 floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
     }
 
-    private val rotationMatrix = FloatArray(16)
-    private val translationMatrix = FloatArray(16)
+    private val modelMatrix = FloatArray(16)
 
     override fun onDrawFrame(unused: GL10) {
         // Redraw background color
@@ -84,35 +83,38 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
         // Create a rotation transformation for the triangle
         val angle = 0f//panAzimuth+ 0.010f * time.toInt()
-        Matrix.setIdentityM(rotationMatrix, 0)
-        Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, 1f)
+        Matrix.setIdentityM(modelMatrix, 0)
+        Matrix.setRotateM(modelMatrix, 0, angle, 0f, 0f, 1f)
 
-
-
-        Matrix.multiplyMM(viewMatrix, 0, viewMatrix, 0, rotationMatrix, 0)
+        Matrix.setIdentityM(modelViewMatrix, 0)
+        Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0)
 
         // Calculate the projection and view transformation
-        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0)
+        Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, modelViewMatrix, 0)
 
 
         // Combine the rotation matrix with the projection and camera view
         // Note that the vPMatrix factor *must be first* in order
         // for the matrix multiplication product to be correct.
         val scratch = FloatArray(16)
-        Matrix.multiplyMM(scratch, 0, vPMatrix, 0, rotationMatrix, 0)
+        Matrix.multiplyMM(scratch, 0, vPMatrix, 0, modelMatrix, 0)
 
         // Draw triangle
 //        mTriangle.draw(scratch)
 
         mSkyGrid.draw(scratch)
-        mSun.draw(scratch)
-        mMoon.draw(scratch)
+        var viewArray = intArrayOf(0, 0, width, height)
+        mSun.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
+        mMoon.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
+
+
     }
 
     // vPMatrix is an abbreviation for "Model View Projection Matrix"
     private val vPMatrix = FloatArray(16)
     private val projectionMatrix = FloatArray(16)
     private val viewMatrix = FloatArray(16)
+    private val modelViewMatrix = FloatArray(16)
 
     override fun onSurfaceChanged(unused: GL10, width: Int, height: Int) {
         this.width = width
@@ -122,7 +124,7 @@ class MyGLRenderer : GLSurfaceView.Renderer {
 
     fun updateViewport(width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
-
+        Log.d("tqpt", String.format("width/height : %d/%d", width, height))
         val ratio: Float = zoom * width.toFloat() / height.toFloat()
 
         // this projection matrix is applied to object coordinates

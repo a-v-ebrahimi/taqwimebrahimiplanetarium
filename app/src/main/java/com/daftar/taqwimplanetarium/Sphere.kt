@@ -2,18 +2,23 @@ package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
+import android.opengl.GLU
 import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
-class Sphere(spaceX: Float, spaceY: Float, spaceZ: Float, spaceR: Float,
+class Sphere(val name: String, val spaceX: Float, val spaceY: Float, val spaceZ: Float, spaceR: Float,
              azimuth: Float, altitude: Float,
              sphereR: Float,
              private val sphereColor: FloatArray) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
+
+    var sphereX = 0f
+    var sphereY = 0f
+    var sphereZ = 0f
     val stp = 18
 
     private val vertexShaderCode =
@@ -73,9 +78,9 @@ class Sphere(spaceX: Float, spaceY: Float, spaceZ: Float, spaceR: Float,
         var triangleCoords: MutableList<Float> = mutableListOf();
 
         val localR = spaceR * cos(altitude)
-        val sphereX = spaceX + localR * cos(azimuth).toFloat()
-        val sphereY = spaceY + localR * sin(azimuth).toFloat()
-        val sphereZ = spaceZ + spaceR * sin(altitude).toFloat()
+        sphereX = spaceX + localR * cos(azimuth).toFloat()
+        sphereY = spaceY + localR * sin(azimuth).toFloat()
+        sphereZ = spaceZ + spaceR * sin(altitude).toFloat()
 
         for (b in -90..90 step stp)
             for (a in 0..360 step stp) {
@@ -141,7 +146,7 @@ class Sphere(spaceX: Float, spaceY: Float, spaceZ: Float, spaceR: Float,
 
     private val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
-    fun draw(mvpMatrix: FloatArray) {
+    fun draw(mvpMatrix: FloatArray, modelViewMatrix: FloatArray, view: IntArray, projectionMatrix: FloatArray) {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram)
 
@@ -150,6 +155,15 @@ class Sphere(spaceX: Float, spaceY: Float, spaceZ: Float, spaceR: Float,
 
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
+
+        var output = floatArrayOf(0f, 0f, 0f)
+        GLU.gluProject(sphereX, sphereY, sphereZ, modelViewMatrix, 0, projectionMatrix, 0, view, 0,
+                output, 0
+        )
+        Log.d("tqpt", "name : $name")
+        Log.d("tqpt", String.format("space : %f/%f/%f", sphereX, sphereY, sphereZ))
+        Log.d("tqpt", String.format("x/y : %f/%f/%f", output[0], output[1], output[2]))
+        Log.d("tqpt", "----")
 
 
         // get handle to vertex shader's vPosition member
