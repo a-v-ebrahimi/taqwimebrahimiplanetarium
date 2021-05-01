@@ -1,4 +1,3 @@
-import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
@@ -6,7 +5,6 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
 import android.widget.ImageView
-import com.daftar.taqwimplanetarium.MainActivity
 import com.daftar.taqwimplanetarium.OpenGLES20Activity
 import java.nio.ByteBuffer
 import kotlin.math.max
@@ -23,7 +21,9 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2)
-        renderer = MyGLRenderer(mainActivity, sunView, moonView)
+        renderer = MyGLRenderer(mainActivity,
+                this,
+                sunView, moonView)
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)

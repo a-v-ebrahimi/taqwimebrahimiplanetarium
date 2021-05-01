@@ -1,3 +1,4 @@
+import android.animation.ValueAnimator
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
@@ -14,7 +15,7 @@ import kotlin.math.*
 const val COORDS_PER_VERTEX = 3
 
 
-class MyGLRenderer(val mainActivity: OpenGLES20Activity, val sunView: ImageView, val moonView: ImageView) : GLSurfaceView.Renderer {
+class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView, private val sunView: ImageView, private val moonView: ImageView) : GLSurfaceView.Renderer {
 
     private var width: Int = 100
     private var height: Int = 100
@@ -34,7 +35,7 @@ class MyGLRenderer(val mainActivity: OpenGLES20Activity, val sunView: ImageView,
         }
 
 
-    val skyRadius = 1f
+    private val skyRadius = 1f
 
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
@@ -57,6 +58,20 @@ class MyGLRenderer(val mainActivity: OpenGLES20Activity, val sunView: ImageView,
                 0f, 0f, 0.0f, skyRadius,
                 sunAzimuth, sunAltitude, sunR,
                 floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
+        sunView.setOnClickListener {
+            val startAz = panAzimuth
+            val startAl = panAltitude
+            val fracAz = (sunAzimuth - panAzimuth) / 100f
+            val fracAl = (sunAltitude - panAltitude) / 100f
+            ValueAnimator.ofFloat(0f, 100f).apply {
+                duration = 1000
+                start()
+            }.addUpdateListener {
+                panAzimuth = startAz + (it.animatedValue as Float) * fracAz
+                panAltitude = startAl + (it.animatedValue as Float) * fracAl
+                surfaceView.requestRender()
+            }
+        }
 
         val moonAzimuth = (0.5f + Math.PI / 2f).toFloat()
         val moonAltitude = (-0.2f + Math.PI / 4f).toFloat()
@@ -68,6 +83,22 @@ class MyGLRenderer(val mainActivity: OpenGLES20Activity, val sunView: ImageView,
                 0f, 0f, 0.0f, skyRadius,
                 moonAzimuth, moonAltitude, moonR,
                 floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
+
+        moonView.setOnClickListener {
+            val startAz = panAzimuth
+            val startAl = panAltitude
+            val fracAz = (moonAzimuth - panAzimuth) / 100f
+            val fracAl = (moonAltitude - panAltitude) / 100f
+            ValueAnimator.ofFloat(0f, 100f).apply {
+                duration = 1000
+                start()
+            }.addUpdateListener {
+                panAzimuth = startAz + (it.animatedValue as Float) * fracAz
+                panAltitude = startAl + (it.animatedValue as Float) * fracAl
+                surfaceView.requestRender()
+            }
+        }
+
     }
 
     private val modelMatrix = FloatArray(16)
@@ -128,7 +159,7 @@ class MyGLRenderer(val mainActivity: OpenGLES20Activity, val sunView: ImageView,
         updateViewport(width, height)
     }
 
-    fun updateViewport(width: Int, height: Int) {
+    private fun updateViewport(width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
         Log.d("tqpt", String.format("width/height : %d/%d", width, height))
         val ratio: Float = zoom * width.toFloat() / height.toFloat()
