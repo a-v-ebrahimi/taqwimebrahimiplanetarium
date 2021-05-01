@@ -1,15 +1,22 @@
 package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
+import android.R.attr.*
 import android.opengl.GLES20
 import android.opengl.GLU
 import android.util.Log
+import android.widget.FrameLayout
+import android.widget.ImageView
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
-class Sphere(val name: String, val spaceX: Float, val spaceY: Float, val spaceZ: Float, spaceR: Float,
+
+class Sphere(val mainActivity: OpenGLES20Activity,
+             val name: String,
+             val imageOn2dScreen: ImageView?,
+             val spaceX: Float, val spaceY: Float, val spaceZ: Float, spaceR: Float,
              azimuth: Float, altitude: Float,
              sphereR: Float,
              private val sphereColor: FloatArray) {
@@ -164,6 +171,16 @@ class Sphere(val name: String, val spaceX: Float, val spaceY: Float, val spaceZ:
         Log.d("tqpt", String.format("space : %f/%f/%f", sphereX, sphereY, sphereZ))
         Log.d("tqpt", String.format("x/y : %f/%f/%f", output[0], output[1], output[2]))
         Log.d("tqpt", "----")
+        if (imageOn2dScreen != null) {
+            mainActivity.runOnUiThread {
+                var w = 32
+                val params = FrameLayout.LayoutParams(
+                        w, w
+                )
+                params.setMargins(output[0].toInt() - w / 2, mainActivity.gLView.height - output[1].toInt() - w / 2, 0, 0)
+                imageOn2dScreen.layoutParams = params
+            }
+        }
 
 
         // get handle to vertex shader's vPosition member
@@ -190,7 +207,8 @@ class Sphere(val name: String, val spaceX: Float, val spaceY: Float, val spaceZ:
             }
 
             // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
+            if (imageOn2dScreen == null)
+                GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
 
 
             // Disable vertex array

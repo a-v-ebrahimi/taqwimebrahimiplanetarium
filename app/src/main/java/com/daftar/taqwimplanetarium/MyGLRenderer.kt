@@ -6,17 +6,15 @@ import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.os.SystemClock
 import android.util.Log
-import com.daftar.taqwimplanetarium.SkyGrid
-import com.daftar.taqwimplanetarium.Sphere
-import com.daftar.taqwimplanetarium.Square
-import com.daftar.taqwimplanetarium.Triangle
+import android.widget.ImageView
+import com.daftar.taqwimplanetarium.*
 import kotlin.math.*
 
 // number of coordinates per vertex in this array
 const val COORDS_PER_VERTEX = 3
 
 
-class MyGLRenderer : GLSurfaceView.Renderer {
+class MyGLRenderer(val mainActivity: OpenGLES20Activity, val sunView: ImageView, val moonView: ImageView) : GLSurfaceView.Renderer {
 
     private var width: Int = 100
     private var height: Int = 100
@@ -52,14 +50,22 @@ class MyGLRenderer : GLSurfaceView.Renderer {
         val sunAzimuth = (Math.PI / 2f).toFloat()
         val sunAltitude = (Math.PI / 4f).toFloat()
         val sunR = 0.1f
-        mSun = Sphere("sun", 0f, 0f, 0.0f, skyRadius,
+        mSun = Sphere(
+                mainActivity,
+                "sun",
+                sunView,
+                0f, 0f, 0.0f, skyRadius,
                 sunAzimuth, sunAltitude, sunR,
                 floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
 
         val moonAzimuth = (0.5f + Math.PI / 2f).toFloat()
         val moonAltitude = (-0.2f + Math.PI / 4f).toFloat()
         val moonR = 0.5f * sunR
-        mMoon = Sphere("moon", 0f, 0f, 0.0f, skyRadius,
+        mMoon = Sphere(
+                mainActivity,
+                "moon",
+                moonView,
+                0f, 0f, 0.0f, skyRadius,
                 moonAzimuth, moonAltitude, moonR,
                 floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
     }

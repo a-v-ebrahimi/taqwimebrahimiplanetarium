@@ -5,6 +5,9 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
+import android.widget.ImageView
+import com.daftar.taqwimplanetarium.MainActivity
+import com.daftar.taqwimplanetarium.OpenGLES20Activity
 import java.nio.ByteBuffer
 import kotlin.math.max
 import kotlin.math.min
@@ -12,7 +15,7 @@ import kotlin.math.min
 
 private const val TOUCH_SCALE_FACTOR: Float = 1.0f / 320f
 
-class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
+class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView) : GLSurfaceView(mainActivity) {
 
     private val renderer: MyGLRenderer
 
@@ -20,11 +23,12 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context) {
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2)
-        renderer = MyGLRenderer()
+        renderer = MyGLRenderer(mainActivity, sunView, moonView)
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
         renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+
     }
 
     private var previousX: Float = 0f
