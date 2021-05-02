@@ -173,7 +173,7 @@ class Sphere(val mainActivity: OpenGLES20Activity,
         Log.d("tqpt", "----")
         if (imageOn2dScreen != null) {
             mainActivity.runOnUiThread {
-                var w = 32
+                val w = min(mainActivity.gLView.height, mainActivity.gLView.width) / 12
                 val params = FrameLayout.LayoutParams(
                         w, w
                 )

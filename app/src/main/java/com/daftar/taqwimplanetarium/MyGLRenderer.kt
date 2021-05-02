@@ -5,7 +5,6 @@ import javax.microedition.khronos.opengles.GL10
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
-import android.os.SystemClock
 import android.util.Log
 import android.widget.ImageView
 import com.daftar.taqwimplanetarium.*
@@ -19,8 +18,6 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     private var width: Int = 100
     private var height: Int = 100
-    private lateinit var mTriangle: Triangle
-    private lateinit var mSquare: Square
     private lateinit var mSkyGrid: SkyGrid
     private lateinit var mSun: Sphere
     private lateinit var mMoon: Sphere
@@ -28,27 +25,23 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
     @Volatile
     var panAzimuth: Float = 0f
     var panAltitude: Float = 0f
-    var zoom: Float = 1f
+    var zoom: Float = 3f
         set(value) {
             field = value
             updateViewport(this.width, this.height)
         }
 
 
-    private val skyRadius = 1f
+    private val skyRadius = 10f
 
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
         GLES20.glClearColor(0.2f, 0.0f, 0.0f, 1.0f)
-        // initialize a triangle
-        mTriangle = Triangle()
-        // initialize a square
-        mSquare = Square()
 
         mSkyGrid = SkyGrid(skyRadius)
 
-        val sunAzimuth = (Math.PI / 2f).toFloat()
+        val sunAzimuth = 0 * (Math.PI / 2f).toFloat()
         val sunAltitude = (Math.PI / 4f).toFloat()
         val sunR = 0.1f
         mSun = Sphere(
@@ -58,24 +51,26 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                 0f, 0f, 0.0f, skyRadius,
                 sunAzimuth, sunAltitude, sunR,
                 floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
-        sunView.setOnClickListener {
-            val startAz = panAzimuth
-            val startAl = panAltitude
-            val fracAz = (sunAzimuth - panAzimuth) / 100f
-            val fracAl = (sunAltitude - panAltitude) / 100f
-            ValueAnimator.ofFloat(0f, 100f).apply {
-                duration = 1000
-                start()
-            }.addUpdateListener {
-                panAzimuth = startAz + (it.animatedValue as Float) * fracAz
-                panAltitude = startAl + (it.animatedValue as Float) * fracAl
-                surfaceView.requestRender()
+        mainActivity.runOnUiThread {
+            sunView.setOnClickListener {
+                val startAz = panAzimuth
+                val startAl = panAltitude
+                val fracAz = (sunAzimuth - panAzimuth) / 100f
+                val fracAl = ((-sunAltitude + Math.PI.toFloat() / 8f) - panAltitude) / 100f
+                ValueAnimator.ofFloat(0f, 100f).apply {
+                    duration = 1000
+                    start()
+                }.addUpdateListener {
+                    panAzimuth = startAz + (it.animatedValue as Float) * fracAz
+                    panAltitude = startAl + (it.animatedValue as Float) * fracAl
+                    surfaceView.requestRender()
+                }
             }
         }
 
-        val moonAzimuth = (0.5f + Math.PI / 2f).toFloat()
-        val moonAltitude = (-0.2f + Math.PI / 4f).toFloat()
-        val moonR = 0.5f * sunR
+        val moonAzimuth = sunAzimuth + 0.5f
+        val moonAltitude = sunAltitude + 0.3f
+        val moonR = sunR
         mMoon = Sphere(
                 mainActivity,
                 "moon",
@@ -84,18 +79,20 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                 moonAzimuth, moonAltitude, moonR,
                 floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
 
-        moonView.setOnClickListener {
-            val startAz = panAzimuth
-            val startAl = panAltitude
-            val fracAz = (moonAzimuth - panAzimuth) / 100f
-            val fracAl = (moonAltitude - panAltitude) / 100f
-            ValueAnimator.ofFloat(0f, 100f).apply {
-                duration = 1000
-                start()
-            }.addUpdateListener {
-                panAzimuth = startAz + (it.animatedValue as Float) * fracAz
-                panAltitude = startAl + (it.animatedValue as Float) * fracAl
-                surfaceView.requestRender()
+        mainActivity.runOnUiThread {
+            moonView.setOnClickListener {
+                val startAz = panAzimuth
+                val startAl = panAltitude
+                val fracAz = (moonAzimuth - panAzimuth) / 100f
+                val fracAl = ((-moonAltitude + Math.PI.toFloat() / 8f) - panAltitude) / 100f
+                ValueAnimator.ofFloat(0f, 100f).apply {
+                    duration = 1000
+                    start()
+                }.addUpdateListener {
+                    panAzimuth = startAz + (it.animatedValue as Float) * fracAz
+                    panAltitude = startAl + (it.animatedValue as Float) * fracAl
+                    surfaceView.requestRender()
+                }
             }
         }
 
@@ -105,7 +102,6 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     override fun onDrawFrame(unused: GL10) {
         // Redraw background color
-        val time = SystemClock.uptimeMillis() % 36000
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         // Set the camera position (View matrix)
@@ -114,8 +110,8 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         val eyeTargetY = localSkyRadius * sin(panAzimuth)
         val eyeTargetZ = skyRadius * (sin(-panAltitude))
         Matrix.setLookAtM(viewMatrix, 0,
-                eyeTargetX, eyeTargetY, eyeTargetZ,
                 0f, 0f, 0f,
+                eyeTargetX, eyeTargetY, eyeTargetZ,
                 0f, 0.0f, 1.0f)
 
         // Create a rotation transformation for the triangle
@@ -140,7 +136,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 //        mTriangle.draw(scratch)
 
         mSkyGrid.draw(scratch)
-        var viewArray = intArrayOf(0, 0, width, height)
+        val viewArray = intArrayOf(0, 0, width, height)
         mSun.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
         mMoon.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
 
@@ -168,9 +164,9 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         // in the onDrawFrame() method
 
 
-        var b = -0.1f
+        val b = -0.1f
         Matrix.frustumM(projectionMatrix, 0,
-                -ratio, ratio, zoom * b, zoom * (b + 2f), 0.8f, 14f)
+                -ratio, ratio, zoom * b, zoom * (b + 2f), 5f, 14f)
     }
 
 }

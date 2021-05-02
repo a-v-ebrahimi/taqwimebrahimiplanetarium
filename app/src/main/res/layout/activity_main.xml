@@ -9,13 +9,13 @@
 
     <ImageView
         android:id="@+id/sunImage"
-        android:layout_width="18sp"
-        android:layout_height="18sp"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
         android:src="@drawable/sun" />
 
     <ImageView
         android:id="@+id/moonImage"
-        android:layout_width="18sp"
-        android:layout_height="18sp"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
         android:src="@drawable/moon" />
 </FrameLayout>
