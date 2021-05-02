@@ -11,7 +11,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-private const val TOUCH_SCALE_FACTOR: Float = 1.0f / 320f
+private const val TOUCH_SCALE_FACTOR: Float = 0.0003f
 
 class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView) : GLSurfaceView(mainActivity) {
 
@@ -87,20 +87,20 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
 
 
                 if (e.pointerCount == 1) {
-                    // reverse direction of rotation above the mid-line
-                    if (y > height / 2) {
-                        dx *= -1
-                    }
+//                    // reverse direction of rotation above the mid-line
+//                    if (y > height / 2) {
+//                        dx *= -1
+//                    }
+//
+//                    // reverse direction of rotation to left of the mid-line
+//                    if (x < width / 2) {
+//                        dy *= -1
+//                    }
 
-                    // reverse direction of rotation to left of the mid-line
-                    if (x < width / 2) {
-                        dy *= -1
-                    }
+                    renderer.panAzimuth += dx * TOUCH_SCALE_FACTOR
+                    renderer.panAltitude -= dy * TOUCH_SCALE_FACTOR
 
-                    renderer.panAzimuth -= dx * TOUCH_SCALE_FACTOR
-                    renderer.panAltitude += dy * TOUCH_SCALE_FACTOR
-
-                    renderer.panAltitude = max(0f, min(renderer.panAltitude, (Math.PI / 2).toFloat()))
+                    renderer.panAltitude = max(-(Math.PI / 2).toFloat(), min(renderer.panAltitude, (Math.PI / 2).toFloat()))
                 } else if (e.pointerCount == 2) {
                 }
                 requestRender()
