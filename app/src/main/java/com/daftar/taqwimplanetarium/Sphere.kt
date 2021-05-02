@@ -13,20 +13,21 @@ import java.nio.FloatBuffer
 import kotlin.math.*
 
 
-class Sphere(val mainActivity: OpenGLES20Activity,
-             val name: String,
-             val imageOn2dScreen: ImageView?,
-             val spaceX: Float, val spaceY: Float, val spaceZ: Float, spaceR: Float,
+class Sphere(private val mainActivity: OpenGLES20Activity,
+             private val name: String,
+             private val imageOn2dScreen: ImageView?,
+             private val imageSizeRatio: Int,
+             private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float, spaceR: Float,
              azimuth: Float, altitude: Float,
              sphereR: Float,
              private val sphereColor: FloatArray) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
 
-    var sphereX = 0f
-    var sphereY = 0f
-    var sphereZ = 0f
-    val stp = 18
+    private var sphereX = 0f
+    private var sphereY = 0f
+    private var sphereZ = 0f
+    private val stp = 18
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -50,7 +51,7 @@ class Sphere(val mainActivity: OpenGLES20Activity,
                     "  gl_FragColor = vColor;" +
                     "}"
 
-    fun loadShader(type: Int, shaderCode: String): Int {
+    private fun loadShader(type: Int, shaderCode: String): Int {
 
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
@@ -173,7 +174,7 @@ class Sphere(val mainActivity: OpenGLES20Activity,
         Log.d("tqpt", "----")
         if (imageOn2dScreen != null) {
             mainActivity.runOnUiThread {
-                val w = min(mainActivity.gLView.height, mainActivity.gLView.width) / 12
+                val w = min(mainActivity.gLView.height, mainActivity.gLView.width) / imageSizeRatio
                 val params = FrameLayout.LayoutParams(
                         w, w
                 )

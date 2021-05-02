@@ -13,7 +13,7 @@ import kotlin.math.min
 
 private const val TOUCH_SCALE_FACTOR: Float = 0.0003f
 
-class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView) : GLSurfaceView(mainActivity) {
+class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView, listOfMasses: ArrayList<ImageView>) : GLSurfaceView(mainActivity) {
 
     private val renderer: MyGLRenderer
 
@@ -23,7 +23,7 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
         setEGLContextClientVersion(2)
         renderer = MyGLRenderer(mainActivity,
                 this,
-                sunView, moonView)
+                sunView, moonView, listOfMasses)
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)

@@ -18,4 +18,41 @@
         android:layout_width="36sp"
         android:layout_height="36sp"
         android:src="@drawable/moon" />
+
+    <ImageView
+        android:id="@+id/mass1"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
+        android:src="@drawable/m1" />
+
+    <ImageView
+        android:id="@+id/mass2"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
+        android:src="@drawable/m2" />
+
+    <ImageView
+        android:id="@+id/mass3"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
+        android:src="@drawable/m1" />
+
+    <ImageView
+        android:id="@+id/mass4"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
+        android:src="@drawable/m2" />
+
+    <ImageView
+        android:id="@+id/mass5"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
+        android:src="@drawable/m1" />
+
+    <ImageView
+        android:id="@+id/mass6"
+        android:layout_width="36sp"
+        android:layout_height="36sp"
+        android:src="@drawable/m2" />
+
 </FrameLayout>

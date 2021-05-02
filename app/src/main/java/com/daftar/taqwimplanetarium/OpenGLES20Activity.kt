@@ -20,7 +20,14 @@ class OpenGLES20Activity : Activity() {
         val rootView = findViewById<FrameLayout>(R.id.rootView)
         val sunView = findViewById<ImageView>(R.id.sunImage)
         val moonView = findViewById<ImageView>(R.id.moonImage)
-        gLView = MyGLSurfaceView(this, sunView, moonView)
+        val listOfMasses = arrayListOf<ImageView>()
+        listOfMasses.add(findViewById(R.id.mass1))
+        listOfMasses.add(findViewById(R.id.mass2))
+        listOfMasses.add(findViewById(R.id.mass3))
+        listOfMasses.add(findViewById(R.id.mass4))
+        listOfMasses.add(findViewById(R.id.mass5))
+        listOfMasses.add(findViewById(R.id.mass6))
+        gLView = MyGLSurfaceView(this, sunView, moonView, listOfMasses)
         rootView.addView(gLView, 0)
     }
 }
