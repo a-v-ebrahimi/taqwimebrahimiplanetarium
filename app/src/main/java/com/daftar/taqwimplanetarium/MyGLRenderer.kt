@@ -79,7 +79,11 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                 moonView, 12,
                 0f, 0f, 0.0f, skyRadius,
                 moonAzimuth, moonAltitude, moonR,
-                floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
+                floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
+                sunRealX = mSun.sphereX,
+                sunRealY = mSun.sphereY,
+                sunRealZ = mSun.sphereZ,
+        )
 
         mainActivity.runOnUiThread {
             moonView.setOnClickListener {

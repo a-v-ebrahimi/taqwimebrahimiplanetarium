@@ -11,23 +11,32 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
+import kotlin.random.Random
 
 
-class Sphere(private val mainActivity: OpenGLES20Activity,
-             private val name: String,
-             private val imageOn2dScreen: ImageView?,
-             private val imageSizeRatio: Int,
-             private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float, spaceR: Float,
-             azimuth: Float, altitude: Float,
-             sphereR: Float,
-             private val sphereColor: FloatArray) {
+class Sphere(
+        private val mainActivity: OpenGLES20Activity,
+        private val name: String,
+        private val imageOn2dScreen: ImageView?,
+        private val imageSizeRatio: Int,
+        private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float, spaceR: Float,
+        azimuth: Float, altitude: Float,
+        sphereR: Float,
+        private val sphereColor: FloatArray,
+        private val isThisMoon: Boolean = false,
+        private val sunRealX: Float = 0f,
+        private val sunRealY: Float = 0f,
+        private val sunRealZ: Float = 0f,
+) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
+    var triangleCoords: MutableList<Float> = mutableListOf();
+    var triangleColors: MutableList<Float> = mutableListOf();
 
-    private var sphereX = 0f
-    private var sphereY = 0f
-    private var sphereZ = 0f
-    private val stp = 18
+    var sphereX = 0f
+    var sphereY = 0f
+    var sphereZ = 0f
+    private val stp = 9
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -83,12 +92,18 @@ class Sphere(private val mainActivity: OpenGLES20Activity,
             GLES20.glLinkProgram(it)
         }
 
-        var triangleCoords: MutableList<Float> = mutableListOf();
 
         val localR = spaceR * cos(altitude)
         sphereX = spaceX + localR * cos(azimuth).toFloat()
         sphereY = spaceY + localR * sin(azimuth).toFloat()
         sphereZ = spaceZ + spaceR * sin(altitude).toFloat()
+
+        val distanceToSun = sqrt(
+                ((sunRealX - sphereX) * (sunRealX - sphereX) +
+                        (sunRealY - sphereY) * (sunRealY - sphereY) +
+                        (sunRealZ - sphereZ) * (sunRealZ - sphereZ).toDouble())).toFloat()
+        val minDistanceToSun = distanceToSun - sphereR
+
 
         for (b in -90..90 step stp)
             for (a in 0..360 step stp) {
@@ -119,15 +134,22 @@ class Sphere(private val mainActivity: OpenGLES20Activity,
                 val yn2 = sphereY + rN * sin(alpha2).toFloat()
                 val p2NextRing = arrayOf(xn2, yn2, zN)
 
+                val ds = 1 - (distanceFromPointToSun(p1) - minDistanceToSun) / sphereR
+
                 // first face
                 triangleCoords.addAll(p1)
                 triangleCoords.addAll(p2)
                 triangleCoords.addAll(p1NextRing)
 
+                triangleColors.add(ds)
+
+                val ds2 = 1 - (distanceFromPointToSun(p2) - minDistanceToSun) / sphereR
+
                 // second face
                 triangleCoords.addAll(p2)
                 triangleCoords.addAll(p1NextRing)
                 triangleCoords.addAll(p2NextRing)
+                triangleColors.add(ds2)
             }
 
         vertexCount = triangleCoords.size / COORDS_PER_VERTEX;
@@ -145,6 +167,13 @@ class Sphere(private val mainActivity: OpenGLES20Activity,
                         position(0)
                     }
                 }
+    }
+
+    private fun distanceFromPointToSun(p1: Array<Float>): Float {
+        return sqrt(
+                ((sunRealX - p1[0]) * (sunRealX - p1[0]) +
+                        (sunRealY - p1[1]) * (sunRealY - p1[1]) +
+                        (sunRealZ - p1[2]) * (sunRealZ - p1[2])).toDouble()).toFloat()
     }
 
     // Set color with red, green, blue and alpha (opacity) values
@@ -168,10 +197,6 @@ class Sphere(private val mainActivity: OpenGLES20Activity,
         GLU.gluProject(sphereX, sphereY, sphereZ, modelViewMatrix, 0, projectionMatrix, 0, view, 0,
                 output, 0
         )
-        Log.d("tqpt", "name : $name")
-        Log.d("tqpt", String.format("space : %f/%f/%f", sphereX, sphereY, sphereZ))
-        Log.d("tqpt", String.format("x/y : %f/%f/%f", output[0], output[1], output[2]))
-        Log.d("tqpt", "----")
         if (imageOn2dScreen != null) {
             mainActivity.runOnUiThread {
                 val w = min(mainActivity.gLView.height, mainActivity.gLView.width) / imageSizeRatio
@@ -200,17 +225,29 @@ class Sphere(private val mainActivity: OpenGLES20Activity,
                     vertexBuffer
             )
 
-            // get handle to fragment shader's vColor member
-            mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
+            if (isThisMoon) {
+                for (v in 0 until (vertexCount / 3)) {
+                    mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
 
-                // Set color for drawing the triangle
-                GLES20.glUniform4fv(colorHandle, 1, sphereColor, 0)
-            }
+                        // Set color for drawing the triangle
+                        GLES20.glUniform4fv(colorHandle, 1,
+                                floatArrayOf(triangleColors[v], triangleColors[v], triangleColors[v], 1f), 0)
+                    }
 
-            // Draw the triangle
-            //           if (imageOn2dScreen == null)
+                    GLES20.glDrawArrays(GLES20.GL_TRIANGLES, v * 3, 3)
+                }
+            } else {
+                // get handle to fragment shader's vColor member
+                mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
+
+                    // Set color for drawing the triangle
+                    GLES20.glUniform4fv(colorHandle, 1, sphereColor, 0)
+                }
+
+                // Draw the triangle
+                //           if (imageOn2dScreen == null)
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
-
+            }
 
             // Disable vertex array
             GLES20.glDisableVertexAttribArray(it)
