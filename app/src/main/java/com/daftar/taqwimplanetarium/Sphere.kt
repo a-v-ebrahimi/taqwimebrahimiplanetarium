@@ -208,7 +208,7 @@ class Sphere(private val mainActivity: OpenGLES20Activity,
             }
 
             // Draw the triangle
-            if (imageOn2dScreen == null)
+            //           if (imageOn2dScreen == null)
                 GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount)
 
 

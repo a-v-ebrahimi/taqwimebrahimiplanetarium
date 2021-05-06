@@ -25,9 +25,9 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
     var masses = arrayListOf<Sphere>()
 
     @Volatile
-    var panAzimuth: Float = 0f
-    var panAltitude: Float = 0f
-    var zoom: Float = 3f
+    var panAzimuth: Float = 0.1f
+    var panAltitude: Float = -0.55f
+    var zoom: Float = 1f
         set(value) {
             field = value
             updateViewport(this.width, this.height)
@@ -71,7 +71,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         }
 
         val moonAzimuth = sunAzimuth + 0.5f
-        val moonAltitude = sunAltitude + 0.3f
+        val moonAltitude = sunAltitude + 0.0f
         val moonR = sunR
         val mMoon = Sphere(
                 mainActivity,
