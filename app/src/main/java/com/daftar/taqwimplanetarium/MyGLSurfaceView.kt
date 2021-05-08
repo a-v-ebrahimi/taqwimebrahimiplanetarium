@@ -11,7 +11,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 
-private const val TOUCH_SCALE_FACTOR: Float = 0.0003f
+private const val TOUCH_SCALE_FACTOR: Float = 0.0006f
 
 class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView, listOfMasses: ArrayList<ImageView>) : GLSurfaceView(mainActivity) {
 

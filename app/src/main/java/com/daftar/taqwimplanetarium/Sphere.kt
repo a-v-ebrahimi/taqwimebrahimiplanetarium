@@ -106,7 +106,7 @@ class Sphere(
 
 
         for (b in -90..90 step stp)
-            for (a in 0..360 step stp) {
+            for (a in 0 until 360 step stp) {
                 val alphaV = Math.PI * b / 180.0f
                 val alphaVN = Math.PI * (b + stp) / 180.0f
 

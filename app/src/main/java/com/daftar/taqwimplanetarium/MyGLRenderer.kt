@@ -8,7 +8,6 @@ import android.opengl.Matrix
 import android.util.Log
 import android.widget.ImageView
 import com.daftar.taqwimplanetarium.*
-import java.lang.Math.random
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -20,7 +19,9 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     private var width: Int = 100
     private var height: Int = 100
+
     private lateinit var mSkyGrid: SkyGrid
+    private lateinit var mHorizon: Horizon
 
     var masses = arrayListOf<Sphere>()
 
@@ -42,6 +43,8 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         GLES20.glClearColor(0.2f, 0.0f, 0.0f, 1.0f)
 
         mSkyGrid = SkyGrid(skyRadius)
+
+        mHorizon = Horizon(skyRadius, floatArrayOf(1f, 1f, 1f, 0.2f))
 
         val sunAzimuth = 0 * (Math.PI / 2f).toFloat()
         val sunAltitude = (Math.PI / 4f).toFloat()
@@ -150,7 +153,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         val eyeTargetY = localSkyRadius * sin(panAzimuth)
         val eyeTargetZ = skyRadius * (sin(-panAltitude))
         Matrix.setLookAtM(viewMatrix, 0,
-                0f, 0f, 0f,
+                0f, 0f, 1f,
                 eyeTargetX, eyeTargetY, eyeTargetZ,
                 0f, 0.0f, 1.0f)
 
@@ -177,6 +180,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
         mSkyGrid.draw(scratch)
         val viewArray = intArrayOf(0, 0, width, height)
+        mHorizon.draw(scratch)
         for (m in masses) {
             m.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
         }
@@ -197,7 +201,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     private fun updateViewport(width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
-        Log.d("tqpt", String.format("width/height : %d/%d", width, height))
+//        Log.d("tqpt", String.format("width/height : %d/%d", width, height))
         val ratio: Float = zoom * width.toFloat() / height.toFloat()
 
         // this projection matrix is applied to object coordinates
