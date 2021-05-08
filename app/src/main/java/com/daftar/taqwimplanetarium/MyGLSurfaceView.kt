@@ -1,10 +1,10 @@
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import android.util.Log
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
 import android.widget.ImageView
+import com.daftar.taqwimplanetarium.LabelsView
 import com.daftar.taqwimplanetarium.OpenGLES20Activity
 import java.nio.ByteBuffer
 import kotlin.math.max
@@ -13,7 +13,9 @@ import kotlin.math.min
 
 private const val TOUCH_SCALE_FACTOR: Float = 0.0006f
 
-class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView, listOfMasses: ArrayList<ImageView>) : GLSurfaceView(mainActivity) {
+class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moonView: ImageView,
+                      listOfMasses: ArrayList<ImageView>, labelsView: LabelsView) : GLSurfaceView(mainActivity) {
+
 
     private val renderer: MyGLRenderer
 
@@ -23,7 +25,7 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
         setEGLContextClientVersion(2)
         renderer = MyGLRenderer(mainActivity,
                 this,
-                sunView, moonView, listOfMasses)
+                sunView, moonView, listOfMasses, labelsView)
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
@@ -109,6 +111,16 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
         previousX = x
         previousY = y
         return true
+    }
+
+    fun setSunAzimth(az: Float) {
+        renderer.sunAzimuth = az
+        invalidate()
+    }
+
+    fun setSunAltitude(al: Float) {
+        renderer.sunAltitude = al
+        invalidate()
     }
 
 }

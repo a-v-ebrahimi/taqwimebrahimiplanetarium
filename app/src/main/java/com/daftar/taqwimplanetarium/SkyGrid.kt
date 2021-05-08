@@ -2,18 +2,20 @@ package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
+import android.opengl.GLU
+import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
-class SkyGrid(skyRadius: Float) {
+class SkyGrid(private val mainActivity: OpenGLES20Activity, skyRadius: Float, val labelsView: LabelsView) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
 
     val stpV = 10
     val stpH = 10
-    val stpL = 4
+    val stpL = 5
 
     var lineCoords: MutableList<Float> = mutableListOf();
     var lineColors: MutableList<Int> = mutableListOf();
@@ -72,10 +74,11 @@ class SkyGrid(skyRadius: Float) {
             GLES20.glLinkProgram(it)
         }
 
-        // horizontal lines
 
+        labelsView.list.clear()
+        // horizontal lines
         for (b in -90..90 step stpV)
-            for (a in 0..360 step stpL) {
+            for (a in 0 until 360 step stpL) {
                 val alphaV = Math.PI * b / 180.0f
                 val alphaVN = Math.PI * (b + stpV) / 180.0f
 
@@ -95,19 +98,17 @@ class SkyGrid(skyRadius: Float) {
                 val y2 = r * sin(alpha2).toFloat()
                 val p2 = arrayOf(x2, y2, z)
 
-                val xn = rN * cos(alpha).toFloat()
-                val yn = rN * sin(alpha).toFloat()
-                val pNextRing = arrayOf(xn, yn, zN)
-
                 // horizontal
                 lineCoords.addAll(p1)
                 lineCoords.addAll(p2)
                 lineColors.add(1)
 
+                if (a % stpH == 0 && z > -90 && z < 90)
+                    labelsView.list.add(LabelXYT(x, y, z, "$a", 0))
             }
 
         for (b in -90..90 step stpL)
-            for (a in 0..360 step stpH) {
+            for (a in 0 until 360 step stpH) {
                 val alphaV = Math.PI * b / 180.0f
                 val alphaVN = Math.PI * (b + stpL) / 180.0f
 
@@ -136,6 +137,8 @@ class SkyGrid(skyRadius: Float) {
                 lineCoords.addAll(pNextRing)
                 lineColors.add(2)
 
+                if (b % stpH == 0 && z > -90 && z < 90)
+                    labelsView.list.add(LabelXYT(x, y, z - 0.15f, "$b", 1))
             }
 
         vertexCount = lineCoords.size / COORDS_PER_VERTEX;
@@ -155,17 +158,13 @@ class SkyGrid(skyRadius: Float) {
                 }
     }
 
-    // Set color with red, green, blue and alpha (opacity) values
-    val colorHLines = floatArrayOf(0.5f, 0.5f, 0.5f, 1.0f)
-    val colorVLines = floatArrayOf(0.5f, 0.5f, 0.5f, 1.0f)
-
 
     private var positionHandle: Int = 0
     private var mColorHandle: Int = 0
 
     private val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
-    fun draw(mvpMatrix: FloatArray) {
+    fun draw(mvpMatrix: FloatArray, modelViewMatrix: FloatArray, view: IntArray, projectionMatrix: FloatArray) {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram)
 
@@ -175,6 +174,22 @@ class SkyGrid(skyRadius: Float) {
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
 
+
+        for (label in labelsView.list) {
+            var output = floatArrayOf(0f, 0f, 0f)
+            GLU.gluProject(label.x, label.y, label.z,
+                    modelViewMatrix, 0, projectionMatrix, 0, view, 0,
+                    output, 0
+            )
+            label.x2d = output[0]
+            label.y2d = output[1]
+            label.z2d = output[2]
+//            if ((label.label=="10" || label.label=="190") && label.z2d<1)
+//            Log.d("tqpt",label.toString())
+        }
+        mainActivity.runOnUiThread {
+            labelsView.invalidate()
+        }
 
         // get handle to vertex shader's vPosition member
         positionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition").also {
@@ -193,17 +208,17 @@ class SkyGrid(skyRadius: Float) {
             )
 
 
-
             GLES20.glLineWidth(3f)
             for (v in 0 until (vertexCount / 2)) {
                 mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
 
-                    if (lineColors[v] == 1)
+                    if (lineColors[v] == 1) {
                         GLES20.glUniform4fv(colorHandle, 1,
                                 floatArrayOf(0.8f, 0.2f, 0.2f, 1f), 0)
-                    else
+                    } else {
                         GLES20.glUniform4fv(colorHandle, 1,
                                 floatArrayOf(0.2f, 0.6f, 0.2f, 1f), 0)
+                    }
                 }
 
                 GLES20.glDrawArrays(GLES20.GL_LINES, v * 2, 2)

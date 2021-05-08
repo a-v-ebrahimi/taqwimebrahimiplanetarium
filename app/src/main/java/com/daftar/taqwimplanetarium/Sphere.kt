@@ -1,17 +1,14 @@
 package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
-import android.R.attr.*
 import android.opengl.GLES20
 import android.opengl.GLU
-import android.util.Log
 import android.widget.FrameLayout
 import android.widget.ImageView
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
-import kotlin.random.Random
 
 
 class Sphere(
@@ -199,11 +196,11 @@ class Sphere(
         )
         if (imageOn2dScreen != null) {
             mainActivity.runOnUiThread {
-                val w = min(mainActivity.gLView.height, mainActivity.gLView.width) / imageSizeRatio
+                val w = min(mainActivity.openGlSkyView.height, mainActivity.openGlSkyView.width) / imageSizeRatio
                 val params = FrameLayout.LayoutParams(
                         w, w
                 )
-                params.setMargins(output[0].toInt() - w / 2, mainActivity.gLView.height - output[1].toInt() - w / 2, 0, 0)
+                params.setMargins(output[0].toInt() - w / 2, mainActivity.openGlSkyView.height - output[1].toInt() - w / 2, 0, 0)
                 imageOn2dScreen.layoutParams = params
             }
         }

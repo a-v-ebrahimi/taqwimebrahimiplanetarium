@@ -15,10 +15,15 @@ import kotlin.random.Random
 const val COORDS_PER_VERTEX = 3
 
 
-class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView, private val sunView: ImageView, private val moonView: ImageView, private val listOfMasses: ArrayList<ImageView>) : GLSurfaceView.Renderer {
+class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView,
+                   private val sunView: ImageView, private val moonView: ImageView,
+                   private val listOfMasses: ArrayList<ImageView>, private val labelsView: LabelsView) : GLSurfaceView.Renderer {
 
     private var width: Int = 100
     private var height: Int = 100
+
+    var sunAzimuth: Float = 0f
+    var sunAltitude: Float = 0f
 
     private lateinit var mSkyGrid: SkyGrid
     private lateinit var mHorizon: Horizon
@@ -40,14 +45,15 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
-        GLES20.glClearColor(153f / 255f, 204f / 255f, 1f, 1.0f)
+        if (sunAltitude > 0)
+            GLES20.glClearColor(153f / 255f, 204f / 255f, 1f, 1.0f)
+        else
+            GLES20.glClearColor(0f / 255f, 0f / 255f, 0f, 1.0f)
 
-        mSkyGrid = SkyGrid(skyRadius)
+        mSkyGrid = SkyGrid(mainActivity, skyRadius, labelsView)
 
-        mHorizon = Horizon(skyRadius, floatArrayOf(1f, 1f, 1f, 0.2f))
+        mHorizon = Horizon(skyRadius)
 
-        val sunAzimuth = 0 * (Math.PI / 2f).toFloat()
-        val sunAltitude = (Math.PI / 4f).toFloat()
         val sunR = 0.1f
         val mSun = Sphere(
                 mainActivity,
@@ -183,9 +189,9 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         // Draw triangle
 //        mTriangle.draw(scratch)
 
-        mSkyGrid.draw(scratch)
         val viewArray = intArrayOf(0, 0, width, height)
-        mHorizon.draw(scratch)
+        mSkyGrid.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
+        mHorizon.draw(scratch, sunAltitude)
         for (m in masses) {
             m.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
         }

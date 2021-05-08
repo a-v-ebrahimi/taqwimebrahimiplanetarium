@@ -1,30 +1,25 @@
 package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
-import android.R.attr.*
 import android.opengl.GLES20.GL_ONE_MINUS_SRC_ALPHA
 import android.opengl.GLES20
 import android.opengl.GLES20.GL_BLEND
 import android.opengl.GLES20.GL_SRC_ALPHA
-import android.opengl.GLU
-import android.util.Log
-import android.widget.FrameLayout
-import android.widget.ImageView
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
-import kotlin.random.Random
 
 
 class Horizon(
-        private val skyRadius: Float,
-        private val horizonColor: FloatArray,
+        private val skyRadius: Float
+
 ) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
-    var triangleCoords: MutableList<Float> = mutableListOf();
-    var triangleColors: MutableList<Float> = mutableListOf();
+    var triangleCoords: MutableList<Float> = mutableListOf()
+    var triangleColors: MutableList<Float> = mutableListOf()
+    private val horizonColor = floatArrayOf(0f, 0f, 0f, 0.2f)
 
     private val stp = 9
 
@@ -136,7 +131,7 @@ class Horizon(
 
     private val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
-    fun draw(mvpMatrix: FloatArray) {
+    fun draw(mvpMatrix: FloatArray, sunAltitude: Float) {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram)
 
@@ -169,6 +164,7 @@ class Horizon(
             mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
 
                 // Set color for drawing the triangle
+
                 GLES20.glUniform4fv(colorHandle, 1, horizonColor, 0)
             }
 

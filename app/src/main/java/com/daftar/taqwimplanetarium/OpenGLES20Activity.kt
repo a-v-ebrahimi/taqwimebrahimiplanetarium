@@ -9,7 +9,7 @@ import android.widget.ImageView
 
 class OpenGLES20Activity : Activity() {
 
-    lateinit var gLView: GLSurfaceView
+    lateinit var openGlSkyView: MyGLSurfaceView
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,7 +27,10 @@ class OpenGLES20Activity : Activity() {
         listOfMasses.add(findViewById(R.id.mass4))
         listOfMasses.add(findViewById(R.id.mass5))
         listOfMasses.add(findViewById(R.id.mass6))
-        gLView = MyGLSurfaceView(this, sunView, moonView, listOfMasses)
-        rootView.addView(gLView, 0)
+        openGlSkyView = MyGLSurfaceView(this, sunView, moonView, listOfMasses, findViewById<LabelsView>(R.id.labelsView))
+        rootView.addView(openGlSkyView, 0)
+
+        openGlSkyView.setSunAzimth(0f)
+        openGlSkyView.setSunAltitude((Math.PI / 4f).toFloat())
     }
 }
