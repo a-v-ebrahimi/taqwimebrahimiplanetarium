@@ -2,7 +2,6 @@ package com.daftar.taqwimplanetarium
 
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
-import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -11,7 +10,13 @@ import kotlin.math.*
 class SkyGrid(skyRadius: Float) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
-    val stp = 10
+
+    val stpV = 10
+    val stpH = 10
+    val stpL = 4
+
+    var lineCoords: MutableList<Float> = mutableListOf();
+    var lineColors: MutableList<Int> = mutableListOf();
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -67,12 +72,12 @@ class SkyGrid(skyRadius: Float) {
             GLES20.glLinkProgram(it)
         }
 
-        var triangleCoords: MutableList<Float> = mutableListOf();
+        // horizontal lines
 
-        for (b in -90..90 step stp)
-            for (a in 0..360 step stp) {
+        for (b in -90..90 step stpV)
+            for (a in 0..360 step stpL) {
                 val alphaV = Math.PI * b / 180.0f
-                val alphaVN = Math.PI * (b + stp) / 180.0f
+                val alphaVN = Math.PI * (b + stpV) / 180.0f
 
                 val r = skyRadius * cos(alphaV).toFloat()
                 val rN = skyRadius * cos(alphaVN).toFloat()
@@ -80,40 +85,70 @@ class SkyGrid(skyRadius: Float) {
                 val z = skyRadius * sin(alphaV).toFloat()
                 val zN = skyRadius * sin(alphaVN).toFloat()
 
-            val alpha = Math.PI * a / 180.0
-            val x = r * cos(alpha).toFloat()
-            val y = r * sin(alpha).toFloat()
-            val p1 = arrayOf(x, y, z)
+                val alpha = Math.PI * a / 180.0
+                val x = r * cos(alpha).toFloat()
+                val y = r * sin(alpha).toFloat()
+                val p1 = arrayOf(x, y, z)
 
-            val alpha2 = Math.PI * (a + stp) / 180.0
-            val x2 = r * cos(alpha2).toFloat()
-            val y2 = r * sin(alpha2).toFloat()
-            val p2 = arrayOf(x2, y2, z)
+                val alpha2 = Math.PI * (a + stpL) / 180.0
+                val x2 = r * cos(alpha2).toFloat()
+                val y2 = r * sin(alpha2).toFloat()
+                val p2 = arrayOf(x2, y2, z)
 
-            val xn=rN*cos(alpha).toFloat()
-            val yn=rN*sin(alpha).toFloat()
-            val pNextRing=arrayOf(xn,yn,zN)
+                val xn = rN * cos(alpha).toFloat()
+                val yn = rN * sin(alpha).toFloat()
+                val pNextRing = arrayOf(xn, yn, zN)
 
-            // horizontal
-            triangleCoords.addAll(p1)
-            triangleCoords.addAll(p2)
+                // horizontal
+                lineCoords.addAll(p1)
+                lineCoords.addAll(p2)
+                lineColors.add(1)
 
-            // vertical
-            triangleCoords.addAll(p1)
-            triangleCoords.addAll(pNextRing)
-        }
+            }
 
-        vertexCount = triangleCoords.size / COORDS_PER_VERTEX;
+        for (b in -90..90 step stpL)
+            for (a in 0..360 step stpH) {
+                val alphaV = Math.PI * b / 180.0f
+                val alphaVN = Math.PI * (b + stpL) / 180.0f
+
+                val r = skyRadius * cos(alphaV).toFloat()
+                val rN = skyRadius * cos(alphaVN).toFloat()
+
+                val z = skyRadius * sin(alphaV).toFloat()
+                val zN = skyRadius * sin(alphaVN).toFloat()
+
+                val alpha = Math.PI * a / 180.0
+                val x = r * cos(alpha).toFloat()
+                val y = r * sin(alpha).toFloat()
+                val p1 = arrayOf(x, y, z)
+
+                val alpha2 = Math.PI * (a + stpH) / 180.0
+                val x2 = r * cos(alpha2).toFloat()
+                val y2 = r * sin(alpha2).toFloat()
+                val p2 = arrayOf(x2, y2, z)
+
+                val xn = rN * cos(alpha).toFloat()
+                val yn = rN * sin(alpha).toFloat()
+                val pNextRing = arrayOf(xn, yn, zN)
+
+                // horizontal
+                lineCoords.addAll(p1)
+                lineCoords.addAll(pNextRing)
+                lineColors.add(2)
+
+            }
+
+        vertexCount = lineCoords.size / COORDS_PER_VERTEX;
         vertexBuffer =
                 // (number of coordinate values * 4 bytes per float)
-                ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
+                ByteBuffer.allocateDirect(lineCoords.size * 4).run {
                     // use the device hardware's native byte order
                     order(ByteOrder.nativeOrder())
 
                     // create a floating point buffer from the ByteBuffer
                     asFloatBuffer().apply {
                         // add the coordinates to the FloatBuffer
-                        put(triangleCoords.toFloatArray())
+                        put(lineCoords.toFloatArray())
                         // set the buffer to read the first coordinate
                         position(0)
                     }
@@ -121,7 +156,8 @@ class SkyGrid(skyRadius: Float) {
     }
 
     // Set color with red, green, blue and alpha (opacity) values
-    val color = floatArrayOf(0.13671875f, 0.76953125f, 0.22265625f, 1.0f)
+    val colorHLines = floatArrayOf(0.5f, 0.5f, 0.5f, 1.0f)
+    val colorVLines = floatArrayOf(0.5f, 0.5f, 0.5f, 1.0f)
 
 
     private var positionHandle: Int = 0
@@ -156,15 +192,22 @@ class SkyGrid(skyRadius: Float) {
                     vertexBuffer
             )
 
-            // get handle to fragment shader's vColor member
-            mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
 
-                // Set color for drawing the triangle
-                GLES20.glUniform4fv(colorHandle, 1, color, 0)
+
+            GLES20.glLineWidth(3f)
+            for (v in 0 until (vertexCount / 2)) {
+                mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
+
+                    if (lineColors[v] == 1)
+                        GLES20.glUniform4fv(colorHandle, 1,
+                                floatArrayOf(0.8f, 0.2f, 0.2f, 1f), 0)
+                    else
+                        GLES20.glUniform4fv(colorHandle, 1,
+                                floatArrayOf(0.2f, 0.6f, 0.2f, 1f), 0)
+                }
+
+                GLES20.glDrawArrays(GLES20.GL_LINES, v * 2, 2)
             }
-
-            // Draw the triangle
-            GLES20.glDrawArrays(GLES20.GL_LINES, 0, vertexCount)
 
 
             // Disable vertex array

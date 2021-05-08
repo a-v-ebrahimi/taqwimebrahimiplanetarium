@@ -40,7 +40,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
-        GLES20.glClearColor(0.2f, 0.0f, 0.0f, 1.0f)
+        GLES20.glClearColor(153f / 255f, 204f / 255f, 1f, 1.0f)
 
         mSkyGrid = SkyGrid(skyRadius)
 

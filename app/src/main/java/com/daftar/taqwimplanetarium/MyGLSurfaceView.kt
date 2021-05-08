@@ -78,7 +78,6 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
                 val buffer: ByteBuffer = ByteBuffer.allocate(4) // 4 = (1 width) * (1 height) * (4 as per RGBA)
 
                 GLES20.glReadPixels(x.toInt(), y.toInt(), 1, 1, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer)
-                Log.d("tqpt", String.format("%d", buffer[3]));
             }
             MotionEvent.ACTION_MOVE -> {
 
