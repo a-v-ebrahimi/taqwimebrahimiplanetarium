@@ -96,8 +96,8 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
 //                        dy *= -1
 //                    }
 
-                    renderer.panAzimuth += dx * TOUCH_SCALE_FACTOR
-                    renderer.panAltitude -= dy * TOUCH_SCALE_FACTOR
+                    renderer.panAzimuth += dx * TOUCH_SCALE_FACTOR * renderer.zoom
+                    renderer.panAltitude -= dy * TOUCH_SCALE_FACTOR * renderer.zoom
 
                     renderer.panAltitude = max(-(Math.PI / 2).toFloat(), min(renderer.panAltitude, (Math.PI / 2).toFloat()))
                 } else if (e.pointerCount == 2) {

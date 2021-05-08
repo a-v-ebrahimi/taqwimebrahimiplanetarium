@@ -61,7 +61,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                 val startAz = panAzimuth
                 val startAl = panAltitude
                 val fracAz = (sunAzimuth - panAzimuth) / 100f
-                val fracAl = ((-sunAltitude + Math.PI.toFloat() / 8f) - panAltitude) / 100f
+                val fracAl = ((-sunAltitude + getZoomAngle()) - panAltitude) / 100f
                 ValueAnimator.ofFloat(0f, 100f).apply {
                     duration = 1000
                     start()
@@ -93,7 +93,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                 val startAz = panAzimuth
                 val startAl = panAltitude
                 val fracAz = (moonAzimuth - panAzimuth) / 100f
-                val fracAl = ((-moonAltitude + Math.PI.toFloat() / 8f) - panAltitude) / 100f
+                val fracAl = ((-moonAltitude + getZoomAngle()) - panAltitude) / 100f
                 ValueAnimator.ofFloat(0f, 100f).apply {
                     duration = 1000
                     start()
@@ -139,6 +139,11 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
             }
             masses.add(mMass)
         }
+    }
+
+    private fun getZoomAngle(): Float {
+        Log.d("tqpt", "$zoom")
+        return zoom * Math.PI.toFloat() / 16f
     }
 
     private val modelMatrix = FloatArray(16)
