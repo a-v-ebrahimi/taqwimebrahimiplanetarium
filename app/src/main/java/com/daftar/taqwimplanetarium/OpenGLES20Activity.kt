@@ -4,12 +4,16 @@ import MyGLSurfaceView
 import android.app.Activity
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.util.Log
 import android.widget.FrameLayout
 import android.widget.ImageView
+import java.util.*
+import kotlin.concurrent.schedule
 
 class OpenGLES20Activity : Activity() {
 
     lateinit var openGlSkyView: MyGLSurfaceView
+    var sunA: Float = (Math.PI / 16).toFloat()
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +35,14 @@ class OpenGLES20Activity : Activity() {
         rootView.addView(openGlSkyView, 0)
 
         openGlSkyView.setSunAzimth(0f)
-        openGlSkyView.setSunAltitude((Math.PI / 4f).toFloat())
+        openGlSkyView.setSunAltitude(sunA)
+
+//        Timer("SettingUp", false).schedule(50,50) {
+//            runOnUiThread {
+//                sunA -= 0.001f
+//                openGlSkyView.setSunAltitude(sunA)
+//            }
+//
+//        }
     }
 }

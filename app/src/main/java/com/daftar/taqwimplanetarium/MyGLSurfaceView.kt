@@ -115,12 +115,12 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity, sunView: ImageView, moon
 
     fun setSunAzimth(az: Float) {
         renderer.sunAzimuth = az
-        invalidate()
+        requestRender()
     }
 
     fun setSunAltitude(al: Float) {
         renderer.sunAltitude = al
-        invalidate()
+        requestRender()
     }
 
 }

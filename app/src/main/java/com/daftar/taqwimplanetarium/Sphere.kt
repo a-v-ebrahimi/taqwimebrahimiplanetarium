@@ -16,9 +16,9 @@ class Sphere(
         private val name: String,
         private val imageOn2dScreen: ImageView?,
         private val imageSizeRatio: Int,
-        private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float, spaceR: Float,
-        azimuth: Float, altitude: Float,
-        sphereR: Float,
+        private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float,
+        private val spaceR: Float,
+        private val sphereR: Float,
         private val sphereColor: FloatArray,
         private val isThisMoon: Boolean = false,
         private val sunRealX: Float = 0f,
@@ -29,6 +29,10 @@ class Sphere(
     private var vertexBuffer: FloatBuffer
     var triangleCoords: MutableList<Float> = mutableListOf();
     var triangleColors: MutableList<Float> = mutableListOf();
+
+    var azimuth: Float = 0f
+    var altitude: Float = 0f
+
 
     var sphereX = 0f
     var sphereY = 0f
@@ -72,7 +76,6 @@ class Sphere(
     private var mProgram: Int
 
     init {
-
         val vertexShader: Int = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode)
         val fragmentShader: Int = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode)
 
@@ -88,12 +91,31 @@ class Sphere(
             // creates OpenGL ES program executables
             GLES20.glLinkProgram(it)
         }
+        vertexBuffer =
+                // (number of coordinate values * 4 bytes per float)
+                ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
+                    // use the device hardware's native byte order
+                    order(ByteOrder.nativeOrder())
 
+                    // create a floating point buffer from the ByteBuffer
+                    asFloatBuffer().apply {
+                        // add the coordinates to the FloatBuffer
+                        put(triangleCoords.toFloatArray())
+                        // set the buffer to read the first coordinate
+                        position(0)
+                    }
+                }
+        createSphere()
+    }
+
+    private fun createSphere() {
+        triangleCoords.clear()
+        triangleColors.clear()
 
         val localR = spaceR * cos(altitude)
-        sphereX = spaceX + localR * cos(azimuth).toFloat()
-        sphereY = spaceY + localR * sin(azimuth).toFloat()
-        sphereZ = spaceZ + spaceR * sin(altitude).toFloat()
+        sphereX = spaceX + localR * cos(azimuth)
+        sphereY = spaceY + localR * sin(azimuth)
+        sphereZ = spaceZ + spaceR * sin(altitude)
 
         val distanceToSun = sqrt(
                 ((sunRealX - sphereX) * (sunRealX - sphereX) +
@@ -164,6 +186,7 @@ class Sphere(
                         position(0)
                     }
                 }
+
     }
 
     private fun distanceFromPointToSun(p1: Array<Float>): Float {
@@ -184,7 +207,10 @@ class Sphere(
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram)
 
-        // get handle to shape's transformation matrix
+        if (vertexBuffer == null)
+            return
+        // get handle to shape's
+        // transformation matrix
         vPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix")
 
         // Pass the projection and view transformation to the shader
@@ -250,4 +276,12 @@ class Sphere(
             GLES20.glDisableVertexAttribArray(it)
         }
     }
+
+    fun setAzimuthAltitude(azimuth: Float, altitude: Float) {
+        this.azimuth = azimuth
+        this.altitude = altitude
+        createSphere()
+    }
+
+
 }

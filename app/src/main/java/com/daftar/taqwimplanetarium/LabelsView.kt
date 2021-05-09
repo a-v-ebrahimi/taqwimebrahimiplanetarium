@@ -32,7 +32,7 @@ class LabelsView @JvmOverloads constructor(
                     if (label.axis == 0)
                         textPaint.color = Color.RED
                     else
-                        textPaint.color = Color.BLACK
+                        textPaint.color = Color.DKGRAY
                     it.drawText(label.label, label.x2d, height - label.y2d, textPaint)
                 }
 

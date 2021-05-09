@@ -19,11 +19,17 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                    private val sunView: ImageView, private val moonView: ImageView,
                    private val listOfMasses: ArrayList<ImageView>, private val labelsView: LabelsView) : GLSurfaceView.Renderer {
 
+    private var mSun: Sphere? = null
     private var width: Int = 100
     private var height: Int = 100
+    val sunR = 0.1f
 
     var sunAzimuth: Float = 0f
     var sunAltitude: Float = 0f
+        set(value) {
+            field = value
+            mSun?.setAzimuthAltitude(sunAzimuth, value)
+        }
 
     private lateinit var mSkyGrid: SkyGrid
     private lateinit var mHorizon: Horizon
@@ -45,23 +51,20 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
-        if (sunAltitude > 0)
-            GLES20.glClearColor(153f / 255f, 204f / 255f, 1f, 1.0f)
-        else
-            GLES20.glClearColor(0f / 255f, 0f / 255f, 0f, 1.0f)
+
 
         mSkyGrid = SkyGrid(mainActivity, skyRadius, labelsView)
 
         mHorizon = Horizon(skyRadius)
 
-        val sunR = 0.1f
-        val mSun = Sphere(
+        mSun = Sphere(
                 mainActivity,
                 "sun",
                 sunView, 12,
                 0f, 0f, 0.0f, skyRadius,
-                sunAzimuth, sunAltitude, sunR,
+                sunR,
                 floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
+        mSun?.setAzimuthAltitude(sunAzimuth, sunAltitude)
         mainActivity.runOnUiThread {
             sunView.setOnClickListener {
                 val startAz = panAzimuth
@@ -87,13 +90,13 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                 "moon",
                 moonView, 12,
                 0f, 0f, 0.0f, skyRadius,
-                moonAzimuth, moonAltitude, moonR,
+                moonR,
                 floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
-                sunRealX = mSun.sphereX,
-                sunRealY = mSun.sphereY,
-                sunRealZ = mSun.sphereZ,
+                sunRealX = mSun!!.sphereX,
+                sunRealY = mSun!!.sphereY,
+                sunRealZ = mSun!!.sphereZ,
         )
-
+        mMoon.setAzimuthAltitude(moonAzimuth, moonAltitude)
         mainActivity.runOnUiThread {
             moonView.setOnClickListener {
                 val startAz = panAzimuth
@@ -111,7 +114,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
             }
         }
 
-        masses.add(mSun)
+        masses.add(mSun!!)
         masses.add(mMoon)
 
         for (m in 0..5) {
@@ -124,9 +127,10 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
                     "mass",
                     massView, 18,
                     0f, 0f, 0.0f, skyRadius,
-                    massAzimuth, massAltitude, massR,
+                    massR,
                     floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
 
+            mMass.setAzimuthAltitude(massAzimuth, massAltitude)
             mainActivity.runOnUiThread {
                 massView.setOnClickListener {
                     val startAz = panAzimuth
@@ -156,6 +160,16 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     override fun onDrawFrame(unused: GL10) {
         // Redraw background color
+        var v = 1f
+        when {
+            sunAltitude > 0 -> v = 1f
+            sunAltitude > -18 * (Math.PI / 180f) -> {
+                v = (sunAltitude * (180f / Math.PI).toFloat() + 18f) / 18f
+            }
+            else -> v = 0f
+        }
+
+        GLES20.glClearColor(v * 153f / 255f, v * 204f / 255f, v * 1f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         // Set the camera position (View matrix)
