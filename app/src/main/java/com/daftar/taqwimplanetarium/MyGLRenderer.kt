@@ -18,6 +18,8 @@ class MyGLRenderer(
     private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView,
     private val massViews: ArrayList<ImageView>, private val labelsView: LabelsView
 ) : GLSurfaceView.Renderer {
+    private val skyRadius = 10f
+    private val sunVisibleRadius = skyRadius * Math.PI.toFloat() * 0.5f / 180f
 
     private val halfVScreenInDegrees: Float = Math.PI.toFloat() / 8
     var lockedMass: Int = -1
@@ -31,7 +33,6 @@ class MyGLRenderer(
 
     private var width: Int = 100
     private var height: Int = 100
-    val sunR = 0.1f
 
     var sunAzimuth: Float = 0f
         set(value) {
@@ -42,6 +43,10 @@ class MyGLRenderer(
                 panAzimuth = sunAzimuth
                 panAltitude = sunAltitude
             }
+            masses[1].sunRealX = masses[0].sphereX
+            masses[1].sunRealY = masses[0].sphereY
+            masses[1].sunRealZ = masses[0].sphereZ
+            masses[1].recreateSphere()
         }
 
     var sunAltitude: Float = 0f
@@ -53,6 +58,10 @@ class MyGLRenderer(
                 panAzimuth = sunAzimuth
                 panAltitude = sunAltitude
             }
+            masses[1].sunRealX = masses[0].sphereX
+            masses[1].sunRealY = masses[0].sphereY
+            masses[1].sunRealZ = masses[0].sphereZ
+            masses[1].recreateSphere()
         }
 
     private lateinit var mSkyGrid: SkyGrid
@@ -70,7 +79,6 @@ class MyGLRenderer(
         }
 
 
-    private val skyRadius = 10f
 
 
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
@@ -86,20 +94,20 @@ class MyGLRenderer(
             "sun",
             massViews[0], 12,
             0f, 0f, 0.0f, skyRadius,
-            sunR,
+            sunVisibleRadius,
             floatArrayOf(0.9f, 0.9f, 0.2f, 1f)
         )
         mSun.setAzimuthAltitude(sunAzimuth, sunAltitude)
 
         val moonAzimuth = sunAzimuth + 0.3f
         val moonAltitude = sunAltitude + 0.3f
-        val moonR = sunR
+        val moonVisibleRadius = sunVisibleRadius
         val mMoon = Sphere(
             mainActivity,
             "moon",
             massViews[1], 12,
             0f, 0f, 0.0f, skyRadius,
-            moonR,
+            moonVisibleRadius,
             floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
             sunRealX = mSun!!.sphereX,
             sunRealY = mSun!!.sphereY,
@@ -115,7 +123,7 @@ class MyGLRenderer(
             val massView = massViews[m]
             val massAzimuth = (Random.nextFloat() * Math.PI * 2).toFloat();
             val massAltitude = (Random.nextFloat() * Math.PI - Math.PI / 2).toFloat()
-            val massR = sunR
+            val massR = sunVisibleRadius * 0.5f
             val mMass = Sphere(
                 mainActivity,
                 "mass",

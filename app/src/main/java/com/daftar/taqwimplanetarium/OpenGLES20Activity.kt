@@ -43,8 +43,8 @@ class OpenGLES20Activity : Activity() {
 
         Timer("SettingUp", false).schedule(50, 50) {
             runOnUiThread {
-                sunAltitude -= 0.001f
-                sunAzimuth += 0.001f
+//                sunAltitude -= 0.001f
+                sunAzimuth += 0.003f
                 openGlSkyView.setSunAzimuthAltitude(sunAzimuth, sunAltitude)
             }
 
@@ -56,16 +56,24 @@ class OpenGLES20Activity : Activity() {
     }
 
     fun setZoomClicked(view: View) {
-        openGlSkyView.SetZoomAngle(30f)
+        openGlSkyView.zoom = 30f
     }
 
     fun setLockMass(view: View) {
         if (openGlSkyView.getLockedMass() == -1) {
             openGlSkyView.setLockMass(0)
-            (findViewById(R.id.btnSetLockMass) as Button).text = "Locked to Sun"
+            (findViewById<Button>(R.id.btnSetLockMass)).text = "Locked to Sun"
         } else {
             openGlSkyView.setLockMass(-1)
-            (findViewById(R.id.btnSetLockMass) as Button).text = "Not Locked"
+            (findViewById<Button>(R.id.btnSetLockMass)).text = "Not Locked"
         }
+    }
+
+    fun onZoomOut(view: View) {
+        openGlSkyView.zoom = openGlSkyView.zoom + 5
+    }
+
+    fun onZoomIn(view: View) {
+        openGlSkyView.zoom = openGlSkyView.zoom - 5
     }
 }

@@ -19,6 +19,17 @@ class MyGLSurfaceView(
 ) : GLSurfaceView(mainActivity) {
 
 
+    var zoom: Float
+        get() {
+            return renderer.zoom
+        }
+        set(value) {
+            val v = max(min(value, 90f), 10f)
+            renderer.zoom = v
+            requestRender()
+        }
+
+
     private val renderer: MyGLRenderer
 
     init {
@@ -147,10 +158,6 @@ class MyGLSurfaceView(
         renderer.setCenter(lookAtAzimuth, lookAtAltitude)
     }
 
-    fun SetZoomAngle(zoomAngle: Float) {
-        renderer.zoom = zoomAngle
-        requestRender()
-    }
 
     fun setLockMass(mass: Int) {
         renderer.lockedMass = mass

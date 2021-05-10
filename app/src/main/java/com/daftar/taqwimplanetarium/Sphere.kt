@@ -3,6 +3,7 @@ package com.daftar.taqwimplanetarium
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
 import android.opengl.GLU
+import android.util.Log
 import android.widget.FrameLayout
 import android.widget.ImageView
 import java.nio.ByteBuffer
@@ -12,19 +13,20 @@ import kotlin.math.*
 
 
 class Sphere(
-        private val mainActivity: OpenGLES20Activity,
-        private val name: String,
-        private val imageOn2dScreen: ImageView?,
-        private val imageSizeRatio: Int,
-        private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float,
-        private val spaceR: Float,
-        private val sphereR: Float,
-        private val sphereColor: FloatArray,
-        private val isThisMoon: Boolean = false,
-        private val sunRealX: Float = 0f,
-        private val sunRealY: Float = 0f,
-        private val sunRealZ: Float = 0f,
+    private val mainActivity: OpenGLES20Activity,
+    private val name: String,
+    private val imageOn2dScreen: ImageView?,
+    private val imageSizeRatio: Int,
+    private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float,
+    private val spaceR: Float,
+    private val sphereR: Float,
+    private val sphereColor: FloatArray,
+    private val isThisMoon: Boolean = false,
+    var sunRealX: Float = 0f,
+    var sunRealY: Float = 0f,
+    var sunRealZ: Float = 0f,
 ) {
+    private var flagRecreationAfterDraw: Boolean = false
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
     var triangleCoords: MutableList<Float> = mutableListOf();
@@ -41,25 +43,25 @@ class Sphere(
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
-            // the coordinates of the objects that use this vertex shader
-            "uniform mat4 uMVPMatrix;" +
-                    "attribute vec4 vPosition;" +
-                    "void main() {" +
-                    // the matrix must be included as a modifier of gl_Position
-                    // Note that the uMVPMatrix factor *must be first* in order
-                    // for the matrix multiplication product to be correct.
-                    "  gl_Position = uMVPMatrix * vPosition;" +
-                    "}"
+        // the coordinates of the objects that use this vertex shader
+        "uniform mat4 uMVPMatrix;" +
+                "attribute vec4 vPosition;" +
+                "void main() {" +
+                // the matrix must be included as a modifier of gl_Position
+                // Note that the uMVPMatrix factor *must be first* in order
+                // for the matrix multiplication product to be correct.
+                "  gl_Position = uMVPMatrix * vPosition;" +
+                "}"
 
     // Use to access and set the view transformation
     private var vPMatrixHandle: Int = 0
 
     private val fragmentShaderCode =
-            "precision mediump float;" +
-                    "uniform vec4 vColor;" +
-                    "void main() {" +
-                    "  gl_FragColor = vColor;" +
-                    "}"
+        "precision mediump float;" +
+                "uniform vec4 vColor;" +
+                "void main() {" +
+                "  gl_FragColor = vColor;" +
+                "}"
 
     private fun loadShader(type: Int, shaderCode: String): Int {
 
@@ -93,18 +95,18 @@ class Sphere(
         }
         vertexBuffer =
                 // (number of coordinate values * 4 bytes per float)
-                ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
-                    // use the device hardware's native byte order
-                    order(ByteOrder.nativeOrder())
+            ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
+                // use the device hardware's native byte order
+                order(ByteOrder.nativeOrder())
 
-                    // create a floating point buffer from the ByteBuffer
-                    asFloatBuffer().apply {
-                        // add the coordinates to the FloatBuffer
-                        put(triangleCoords.toFloatArray())
-                        // set the buffer to read the first coordinate
-                        position(0)
-                    }
+                // create a floating point buffer from the ByteBuffer
+                asFloatBuffer().apply {
+                    // add the coordinates to the FloatBuffer
+                    put(triangleCoords.toFloatArray())
+                    // set the buffer to read the first coordinate
+                    position(0)
                 }
+            }
         createSphere()
     }
 
@@ -118,9 +120,10 @@ class Sphere(
         sphereZ = spaceZ + spaceR * sin(altitude)
 
         val distanceToSun = sqrt(
-                ((sunRealX - sphereX) * (sunRealX - sphereX) +
-                        (sunRealY - sphereY) * (sunRealY - sphereY) +
-                        (sunRealZ - sphereZ) * (sunRealZ - sphereZ).toDouble())).toFloat()
+            ((sunRealX - sphereX) * (sunRealX - sphereX) +
+                    (sunRealY - sphereY) * (sunRealY - sphereY) +
+                    (sunRealZ - sphereZ) * (sunRealZ - sphereZ).toDouble())
+        ).toFloat()
         val minDistanceToSun = distanceToSun - sphereR
 
 
@@ -174,26 +177,27 @@ class Sphere(
         vertexCount = triangleCoords.size / COORDS_PER_VERTEX;
         vertexBuffer =
                 // (number of coordinate values * 4 bytes per float)
-                ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
-                    // use the device hardware's native byte order
-                    order(ByteOrder.nativeOrder())
+            ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
+                // use the device hardware's native byte order
+                order(ByteOrder.nativeOrder())
 
-                    // create a floating point buffer from the ByteBuffer
-                    asFloatBuffer().apply {
-                        // add the coordinates to the FloatBuffer
-                        put(triangleCoords.toFloatArray())
-                        // set the buffer to read the first coordinate
-                        position(0)
-                    }
+                // create a floating point buffer from the ByteBuffer
+                asFloatBuffer().apply {
+                    // add the coordinates to the FloatBuffer
+                    put(triangleCoords.toFloatArray())
+                    // set the buffer to read the first coordinate
+                    position(0)
                 }
+            }
 
     }
 
     private fun distanceFromPointToSun(p1: Array<Float>): Float {
         return sqrt(
-                ((sunRealX - p1[0]) * (sunRealX - p1[0]) +
-                        (sunRealY - p1[1]) * (sunRealY - p1[1]) +
-                        (sunRealZ - p1[2]) * (sunRealZ - p1[2])).toDouble()).toFloat()
+            ((sunRealX - p1[0]) * (sunRealX - p1[0]) +
+                    (sunRealY - p1[1]) * (sunRealY - p1[1]) +
+                    (sunRealZ - p1[2]) * (sunRealZ - p1[2])).toDouble()
+        ).toFloat()
     }
 
     // Set color with red, green, blue and alpha (opacity) values
@@ -203,7 +207,12 @@ class Sphere(
 
     private val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
-    fun draw(mvpMatrix: FloatArray, modelViewMatrix: FloatArray, view: IntArray, projectionMatrix: FloatArray) {
+    fun draw(
+        mvpMatrix: FloatArray,
+        modelViewMatrix: FloatArray,
+        view: IntArray,
+        projectionMatrix: FloatArray
+    ) {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram)
 
@@ -217,16 +226,25 @@ class Sphere(
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
 
         var output = floatArrayOf(0f, 0f, 0f)
-        GLU.gluProject(sphereX, sphereY, sphereZ, modelViewMatrix, 0, projectionMatrix, 0, view, 0,
-                output, 0
+        GLU.gluProject(
+            sphereX, sphereY, sphereZ, modelViewMatrix, 0, projectionMatrix, 0, view, 0,
+            output, 0
         )
         if (imageOn2dScreen != null) {
             mainActivity.runOnUiThread {
-                val w = min(mainActivity.openGlSkyView.height, mainActivity.openGlSkyView.width) / imageSizeRatio
+                val w = min(
+                    mainActivity.openGlSkyView.height,
+                    mainActivity.openGlSkyView.width
+                ) / imageSizeRatio
                 val params = FrameLayout.LayoutParams(
-                        w, w
+                    w, w
                 )
-                params.setMargins(output[0].toInt() - w / 2, mainActivity.openGlSkyView.height - output[1].toInt() - w / 2, 0, 0)
+                params.setMargins(
+                    output[0].toInt() - w / 2,
+                    mainActivity.openGlSkyView.height - output[1].toInt() - w / 2,
+                    0,
+                    0
+                )
                 imageOn2dScreen.layoutParams = params
             }
         }
@@ -240,22 +258,31 @@ class Sphere(
 
             // Prepare the triangle coordinate data
             GLES20.glVertexAttribPointer(
-                    it,
-                    COORDS_PER_VERTEX,
-                    GLES20.GL_FLOAT,
-                    false,
-                    vertexStride,
-                    vertexBuffer
+                it,
+                COORDS_PER_VERTEX,
+                GLES20.GL_FLOAT,
+                false,
+                vertexStride,
+                vertexBuffer
             )
 
             if (isThisMoon) {
+                Log.d("tqpt", "")
                 for (v in 0 until (vertexCount / 3)) {
-                    mColorHandle = GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
+                    mColorHandle =
+                        GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
 
-                        // Set color for drawing the triangle
-                        GLES20.glUniform4fv(colorHandle, 1,
-                                floatArrayOf(triangleColors[v], triangleColors[v], triangleColors[v], 1f), 0)
-                    }
+                            // Set color for drawing the triangle
+                            GLES20.glUniform4fv(
+                                colorHandle, 1,
+                                floatArrayOf(
+                                    triangleColors[v],
+                                    triangleColors[v],
+                                    triangleColors[v],
+                                    1f
+                                ), 0
+                            )
+                        }
 
                     GLES20.glDrawArrays(GLES20.GL_TRIANGLES, v * 3, 3)
                 }
@@ -275,12 +302,20 @@ class Sphere(
             // Disable vertex array
             GLES20.glDisableVertexAttribArray(it)
         }
+        if (flagRecreationAfterDraw) {
+            flagRecreationAfterDraw = false
+            createSphere()
+        }
     }
 
     fun setAzimuthAltitude(azimuth: Float, altitude: Float) {
         this.azimuth = azimuth
         this.altitude = altitude
         createSphere()
+    }
+
+    fun recreateSphere() {
+        flagRecreationAfterDraw = true
     }
 
 
