@@ -5,7 +5,6 @@ import javax.microedition.khronos.opengles.GL10
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
-import android.util.Log
 import android.widget.ImageView
 import com.daftar.taqwimplanetarium.*
 import kotlin.math.*
@@ -21,13 +20,13 @@ class MyGLRenderer(
 ) : GLSurfaceView.Renderer {
 
     private val halfVScreenInDegrees: Float = Math.PI.toFloat() / 8
-    var lockMass: Int = -1
+    var lockedMass: Int = -1
         set(value) {
             field = value
-            if (lockMass > masses.size - 1)
+            if (lockedMass == -1 || lockedMass > masses.size - 1)
                 return
-            panAzimuth = masses[lockMass].azimuth
-            panAltitude = masses[lockMass].altitude + halfVScreenInDegrees
+            panAzimuth = masses[lockedMass].azimuth
+            panAltitude = masses[lockedMass].altitude + halfVScreenInDegrees
         }
 
     private var width: Int = 100
@@ -39,7 +38,7 @@ class MyGLRenderer(
             field = value
             if (masses.size == 0) return
             masses[0].setAzimuthAltitude(value, sunAltitude)
-            if (lockMass == 0) {
+            if (lockedMass == 0) {
                 panAzimuth = sunAzimuth
                 panAltitude = sunAltitude
             }
@@ -50,7 +49,7 @@ class MyGLRenderer(
             field = value
             if (masses.size == 0) return
             masses[0].setAzimuthAltitude(sunAzimuth, value)
-            if (lockMass == 0) {
+            if (lockedMass == 0) {
                 panAzimuth = sunAzimuth
                 panAltitude = sunAltitude
             }
@@ -92,8 +91,8 @@ class MyGLRenderer(
         )
         mSun.setAzimuthAltitude(sunAzimuth, sunAltitude)
 
-        val moonAzimuth = sunAzimuth + 0.5f
-        val moonAltitude = sunAltitude + 0.0f
+        val moonAzimuth = sunAzimuth + 0.3f
+        val moonAltitude = sunAltitude + 0.3f
         val moonR = sunR
         val mMoon = Sphere(
             mainActivity,

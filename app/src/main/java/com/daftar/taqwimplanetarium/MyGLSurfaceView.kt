@@ -153,8 +153,12 @@ class MyGLSurfaceView(
     }
 
     fun setLockMass(mass: Int) {
-        renderer.lockMass = mass
+        renderer.lockedMass = mass
         requestRender()
+    }
+
+    fun getLockedMass(): Int {
+        return renderer.lockedMass
     }
 
     fun setSunAzimuthAltitude(sunAzimuth: Float, sunAltitude: Float) {

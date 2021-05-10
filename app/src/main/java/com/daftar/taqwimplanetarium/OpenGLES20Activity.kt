@@ -4,6 +4,7 @@ import MyGLSurfaceView
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import java.util.*
@@ -59,6 +60,12 @@ class OpenGLES20Activity : Activity() {
     }
 
     fun setLockMass(view: View) {
-        openGlSkyView.setLockMass(0)
+        if (openGlSkyView.getLockedMass() == -1) {
+            openGlSkyView.setLockMass(0)
+            (findViewById(R.id.btnSetLockMass) as Button).text = "Locked to Sun"
+        } else {
+            openGlSkyView.setLockMass(-1)
+            (findViewById(R.id.btnSetLockMass) as Button).text = "Not Locked"
+        }
     }
 }
