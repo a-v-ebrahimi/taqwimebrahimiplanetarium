@@ -64,7 +64,7 @@ class MyGLRenderer(
     @Volatile
     var panAzimuth: Float = 0.1f
     var panAltitude: Float = Math.PI.toFloat() / 4f
-    var zoom: Float = 1f
+    var zoom: Float = 45f
         set(value) {
             field = value
             updateViewport(this.width, this.height)
@@ -142,11 +142,6 @@ class MyGLRenderer(
         }
     }
 
-    private fun getZoomAngle(): Float {
-        Log.d("tqpt", "$zoom")
-        return zoom * Math.PI.toFloat() / 16f
-    }
-
     private val modelMatrix = FloatArray(16)
 
     override fun onDrawFrame(unused: GL10) {
@@ -217,17 +212,10 @@ class MyGLRenderer(
 
     private fun updateViewport(width: Int, height: Int) {
         GLES20.glViewport(0, 0, width, height)
-//        Log.d("tqpt", String.format("width/height : %d/%d", width, height))
-        val ratio: Float = zoom * width.toFloat() / height.toFloat()
 
-        // this projection matrix is applied to object coordinates
-        // in the onDrawFrame() method
-
-
-        val b = -0.1f
-        Matrix.frustumM(
+        Matrix.perspectiveM(
             projectionMatrix, 0,
-            -ratio, ratio, zoom * b, zoom * (b + 2f), 5f, 14f
+            zoom, width.toFloat() / height.toFloat(), 2f, 14f
         )
     }
 

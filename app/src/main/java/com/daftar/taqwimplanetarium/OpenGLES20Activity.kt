@@ -6,11 +6,14 @@ import android.os.Bundle
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
+import java.util.*
+import kotlin.concurrent.schedule
 
 class OpenGLES20Activity : Activity() {
 
     lateinit var openGlSkyView: MyGLSurfaceView
-    var sunA: Float = (Math.PI / 16).toFloat()
+    var sunAzimuth: Float = (Math.PI / 16).toFloat()
+    var sunAltitude: Float = (Math.PI / 3).toFloat()
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,24 +37,25 @@ class OpenGLES20Activity : Activity() {
         )
         rootView.addView(openGlSkyView, 0)
 
-        openGlSkyView.sunAzimuth(0f)
-        openGlSkyView.setSunAltitude(sunA)
+        openGlSkyView.sunAzimuth(sunAzimuth)
+        openGlSkyView.setSunAltitude(sunAltitude)
 
-//        Timer("SettingUp", false).schedule(50,50) {
-//            runOnUiThread {
-//                sunA -= 0.001f
-//                openGlSkyView.setSunAltitude(sunA)
-//            }
-//
-//        }
+        Timer("SettingUp", false).schedule(50, 50) {
+            runOnUiThread {
+                sunAltitude -= 0.001f
+                sunAzimuth += 0.001f
+                openGlSkyView.setSunAzimuthAltitude(sunAzimuth, sunAltitude)
+            }
+
+        }
     }
 
     fun setCenterClicked(view: View) {
-        openGlSkyView.setCenter((Math.PI / 4f).toFloat(), (Math.PI / 4f).toFloat())
+        openGlSkyView.setCenter(0f, 0f)
     }
 
     fun setZoomClicked(view: View) {
-        openGlSkyView.SetZoomAngle((Math.PI / 8f).toFloat())
+        openGlSkyView.SetZoomAngle(30f)
     }
 
     fun setLockMass(view: View) {

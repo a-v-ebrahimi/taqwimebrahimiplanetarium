@@ -79,7 +79,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:onClick="setCenterClicked"
-            android:text="test setCenter" />
+            android:text="test setCenter : (0,0)" />
 
         <Button
             android:id="@+id/btnSetZoom"
@@ -87,7 +87,7 @@
             android:layout_height="wrap_content"
             android:fontFamily="monospace"
             android:onClick="setZoomClicked"
-            android:text="test setZoom" />
+            android:text="test setZoom (30 degrees)" />
 
         <Button
             android:id="@+id/btnSetLockMass"

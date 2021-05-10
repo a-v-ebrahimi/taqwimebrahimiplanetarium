@@ -13,8 +13,10 @@ import kotlin.math.min
 
 private const val TOUCH_SCALE_FACTOR: Float = 0.0006f
 
-class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
-                      massViews: ArrayList<ImageView>, labelsView: LabelsView) : GLSurfaceView(mainActivity) {
+class MyGLSurfaceView(
+    mainActivity: OpenGLES20Activity,
+    massViews: ArrayList<ImageView>, labelsView: LabelsView
+) : GLSurfaceView(mainActivity) {
 
 
     private val renderer: MyGLRenderer
@@ -23,9 +25,11 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2)
-        renderer = MyGLRenderer(mainActivity,
-                this,
-                massViews, labelsView)
+        renderer = MyGLRenderer(
+            mainActivity,
+            this,
+            massViews, labelsView
+        )
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
@@ -36,14 +40,16 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
     private var previousX: Float = 0f
     private var previousY: Float = 0f
 
-    class ScaleDetectorListener(val myGLSurfaceView: MyGLSurfaceView, val renderer: MyGLRenderer) : OnScaleGestureListener {
+    class ScaleDetectorListener(val myGLSurfaceView: MyGLSurfaceView, val renderer: MyGLRenderer) :
+        OnScaleGestureListener {
         private var sizeCoef: Float = 1f
         var scaleFocusX = 0f
         var scaleFocusY = 0f
         override fun onScale(arg0: ScaleGestureDetector): Boolean {
             val scale: Float = arg0.scaleFactor * sizeCoef
             sizeCoef = scale
-            renderer.zoom = 1 / scale;
+            val delta = if (arg0.scaleFactor > 1f) -0.5f else 0.5f
+            renderer.zoom += delta
             myGLSurfaceView.requestRender()
             return true
         }
@@ -61,8 +67,10 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
         }
     }
 
-    var mDetector = ScaleGestureDetector(getContext(),
-            ScaleDetectorListener(this, renderer))
+    var mDetector = ScaleGestureDetector(
+        getContext(),
+        ScaleDetectorListener(this, renderer)
+    )
 
     override fun onTouchEvent(e: MotionEvent): Boolean {
         if (mDetector.onTouchEvent(e)) {
@@ -77,9 +85,18 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
 
         when (e.action) {
             MotionEvent.ACTION_DOWN -> {
-                val buffer: ByteBuffer = ByteBuffer.allocate(4) // 4 = (1 width) * (1 height) * (4 as per RGBA)
+                val buffer: ByteBuffer =
+                    ByteBuffer.allocate(4) // 4 = (1 width) * (1 height) * (4 as per RGBA)
 
-                GLES20.glReadPixels(x.toInt(), y.toInt(), 1, 1, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buffer)
+                GLES20.glReadPixels(
+                    x.toInt(),
+                    y.toInt(),
+                    1,
+                    1,
+                    GLES20.GL_RGBA,
+                    GLES20.GL_UNSIGNED_BYTE,
+                    buffer
+                )
             }
             MotionEvent.ACTION_MOVE -> {
 
@@ -98,10 +115,13 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
 //                        dy *= -1
 //                    }
 
-                    renderer.panAzimuth += dx * TOUCH_SCALE_FACTOR * renderer.zoom
-                    renderer.panAltitude -= dy * TOUCH_SCALE_FACTOR * renderer.zoom
+                    renderer.panAzimuth += dx * TOUCH_SCALE_FACTOR
+                    renderer.panAltitude += dy * TOUCH_SCALE_FACTOR
 
-                    renderer.panAltitude = max(-(Math.PI / 2).toFloat(), min(renderer.panAltitude, (Math.PI / 2).toFloat()))
+                    renderer.panAltitude = max(
+                        -(Math.PI / 2).toFloat(),
+                        min(renderer.panAltitude, (Math.PI / 2).toFloat())
+                    )
                 } else if (e.pointerCount == 2) {
                 }
                 requestRender()
@@ -128,11 +148,18 @@ class MyGLSurfaceView(mainActivity: OpenGLES20Activity,
     }
 
     fun SetZoomAngle(zoomAngle: Float) {
+        renderer.zoom = zoomAngle
         requestRender()
     }
 
     fun setLockMass(mass: Int) {
         renderer.lockMass = mass
+        requestRender()
+    }
+
+    fun setSunAzimuthAltitude(sunAzimuth: Float, sunAltitude: Float) {
+        renderer.sunAzimuth = sunAzimuth
+        renderer.sunAltitude = sunAltitude
         requestRender()
     }
 
