@@ -2,13 +2,10 @@ package com.daftar.taqwimplanetarium
 
 import MyGLSurfaceView
 import android.app.Activity
-import android.opengl.GLSurfaceView
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import java.util.*
-import kotlin.concurrent.schedule
 
 class OpenGLES20Activity : Activity() {
 
@@ -22,19 +19,22 @@ class OpenGLES20Activity : Activity() {
         // as the ContentView for this Activity.
         setContentView(R.layout.activity_main)
         val rootView = findViewById<FrameLayout>(R.id.rootView)
-        val sunView = findViewById<ImageView>(R.id.sunImage)
-        val moonView = findViewById<ImageView>(R.id.moonImage)
-        val listOfMasses = arrayListOf<ImageView>()
-        listOfMasses.add(findViewById(R.id.mass1))
-        listOfMasses.add(findViewById(R.id.mass2))
-        listOfMasses.add(findViewById(R.id.mass3))
-        listOfMasses.add(findViewById(R.id.mass4))
-        listOfMasses.add(findViewById(R.id.mass5))
-        listOfMasses.add(findViewById(R.id.mass6))
-        openGlSkyView = MyGLSurfaceView(this, sunView, moonView, listOfMasses, findViewById<LabelsView>(R.id.labelsView))
+        val massViews = arrayListOf<ImageView>()
+        massViews.add(findViewById(R.id.sunImage))
+        massViews.add(findViewById(R.id.moonImage))
+        massViews.add(findViewById(R.id.mass1))
+        massViews.add(findViewById(R.id.mass2))
+        massViews.add(findViewById(R.id.mass3))
+        massViews.add(findViewById(R.id.mass4))
+        massViews.add(findViewById(R.id.mass5))
+        massViews.add(findViewById(R.id.mass6))
+        openGlSkyView = MyGLSurfaceView(
+            this,
+            massViews, findViewById<LabelsView>(R.id.labelsView)
+        )
         rootView.addView(openGlSkyView, 0)
 
-        openGlSkyView.setSunAzimth(0f)
+        openGlSkyView.sunAzimuth(0f)
         openGlSkyView.setSunAltitude(sunA)
 
 //        Timer("SettingUp", false).schedule(50,50) {
@@ -44,5 +44,17 @@ class OpenGLES20Activity : Activity() {
 //            }
 //
 //        }
+    }
+
+    fun setCenterClicked(view: View) {
+        openGlSkyView.setCenter((Math.PI / 4f).toFloat(), (Math.PI / 4f).toFloat())
+    }
+
+    fun setZoomClicked(view: View) {
+        openGlSkyView.SetZoomAngle((Math.PI / 8f).toFloat())
+    }
+
+    fun setLockMass(view: View) {
+        openGlSkyView.setLockMass(0)
     }
 }

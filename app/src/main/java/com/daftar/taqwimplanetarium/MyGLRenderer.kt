@@ -15,20 +15,45 @@ import kotlin.random.Random
 const val COORDS_PER_VERTEX = 3
 
 
-class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView,
-                   private val sunView: ImageView, private val moonView: ImageView,
-                   private val listOfMasses: ArrayList<ImageView>, private val labelsView: LabelsView) : GLSurfaceView.Renderer {
+class MyGLRenderer(
+    private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView,
+    private val massViews: ArrayList<ImageView>, private val labelsView: LabelsView
+) : GLSurfaceView.Renderer {
 
-    private var mSun: Sphere? = null
+    private val halfVScreenInDegrees: Float = Math.PI.toFloat() / 8
+    var lockMass: Int = -1
+        set(value) {
+            field = value
+            if (lockMass > masses.size - 1)
+                return
+            panAzimuth = masses[lockMass].azimuth
+            panAltitude = masses[lockMass].altitude + halfVScreenInDegrees
+        }
+
     private var width: Int = 100
     private var height: Int = 100
     val sunR = 0.1f
 
     var sunAzimuth: Float = 0f
+        set(value) {
+            field = value
+            if (masses.size == 0) return
+            masses[0].setAzimuthAltitude(value, sunAltitude)
+            if (lockMass == 0) {
+                panAzimuth = sunAzimuth
+                panAltitude = sunAltitude
+            }
+        }
+
     var sunAltitude: Float = 0f
         set(value) {
             field = value
-            mSun?.setAzimuthAltitude(sunAzimuth, value)
+            if (masses.size == 0) return
+            masses[0].setAzimuthAltitude(sunAzimuth, value)
+            if (lockMass == 0) {
+                panAzimuth = sunAzimuth
+                panAltitude = sunAltitude
+            }
         }
 
     private lateinit var mSkyGrid: SkyGrid
@@ -38,7 +63,7 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
     @Volatile
     var panAzimuth: Float = 0.1f
-    var panAltitude: Float = -0.55f
+    var panAltitude: Float = Math.PI.toFloat() / 4f
     var zoom: Float = 1f
         set(value) {
             field = value
@@ -57,97 +82,63 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
         mHorizon = Horizon(skyRadius)
 
-        mSun = Sphere(
-                mainActivity,
-                "sun",
-                sunView, 12,
-                0f, 0f, 0.0f, skyRadius,
-                sunR,
-                floatArrayOf(0.9f, 0.9f, 0.2f, 1f))
-        mSun?.setAzimuthAltitude(sunAzimuth, sunAltitude)
-        mainActivity.runOnUiThread {
-            sunView.setOnClickListener {
-                val startAz = panAzimuth
-                val startAl = panAltitude
-                val fracAz = (sunAzimuth - panAzimuth) / 100f
-                val fracAl = ((-sunAltitude + getZoomAngle()) - panAltitude) / 100f
-                ValueAnimator.ofFloat(0f, 100f).apply {
-                    duration = 1000
-                    start()
-                }.addUpdateListener {
-                    panAzimuth = startAz + (it.animatedValue as Float) * fracAz
-                    panAltitude = startAl + (it.animatedValue as Float) * fracAl
-                    surfaceView.requestRender()
-                }
-            }
-        }
+        val mSun = Sphere(
+            mainActivity,
+            "sun",
+            massViews[0], 12,
+            0f, 0f, 0.0f, skyRadius,
+            sunR,
+            floatArrayOf(0.9f, 0.9f, 0.2f, 1f)
+        )
+        mSun.setAzimuthAltitude(sunAzimuth, sunAltitude)
 
         val moonAzimuth = sunAzimuth + 0.5f
         val moonAltitude = sunAltitude + 0.0f
         val moonR = sunR
         val mMoon = Sphere(
-                mainActivity,
-                "moon",
-                moonView, 12,
-                0f, 0f, 0.0f, skyRadius,
-                moonR,
-                floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
-                sunRealX = mSun!!.sphereX,
-                sunRealY = mSun!!.sphereY,
-                sunRealZ = mSun!!.sphereZ,
+            mainActivity,
+            "moon",
+            massViews[1], 12,
+            0f, 0f, 0.0f, skyRadius,
+            moonR,
+            floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
+            sunRealX = mSun!!.sphereX,
+            sunRealY = mSun!!.sphereY,
+            sunRealZ = mSun!!.sphereZ,
         )
         mMoon.setAzimuthAltitude(moonAzimuth, moonAltitude)
-        mainActivity.runOnUiThread {
-            moonView.setOnClickListener {
-                val startAz = panAzimuth
-                val startAl = panAltitude
-                val fracAz = (moonAzimuth - panAzimuth) / 100f
-                val fracAl = ((-moonAltitude + getZoomAngle()) - panAltitude) / 100f
-                ValueAnimator.ofFloat(0f, 100f).apply {
-                    duration = 1000
-                    start()
-                }.addUpdateListener {
-                    panAzimuth = startAz + (it.animatedValue as Float) * fracAz
-                    panAltitude = startAl + (it.animatedValue as Float) * fracAl
-                    surfaceView.requestRender()
-                }
-            }
-        }
 
         masses.add(mSun!!)
         masses.add(mMoon)
 
-        for (m in 0..5) {
-            val massView = listOfMasses[m]
+        // add random masses
+        for (m in 2 until massViews.size) {
+            val massView = massViews[m]
             val massAzimuth = (Random.nextFloat() * Math.PI * 2).toFloat();
             val massAltitude = (Random.nextFloat() * Math.PI - Math.PI / 2).toFloat()
             val massR = sunR
             val mMass = Sphere(
-                    mainActivity,
-                    "mass",
-                    massView, 18,
-                    0f, 0f, 0.0f, skyRadius,
-                    massR,
-                    floatArrayOf(0.9f, 0.9f, 0.9f, 1f))
+                mainActivity,
+                "mass",
+                massView, 18,
+                0f, 0f, 0.0f, skyRadius,
+                massR,
+                floatArrayOf(0.9f, 0.9f, 0.9f, 1f)
+            )
 
             mMass.setAzimuthAltitude(massAzimuth, massAltitude)
+
+            masses.add(mMass)
+        }
+
+        for (m in 0 until masses.size) {
+            val massView = massViews[m]
+            val mass = masses[m]
             mainActivity.runOnUiThread {
                 massView.setOnClickListener {
-                    val startAz = panAzimuth
-                    val startAl = panAltitude
-                    val fracAz = (massAzimuth - panAzimuth) / 100f
-                    val fracAl = ((-massAltitude + Math.PI.toFloat() / 8f) - panAltitude) / 100f
-                    ValueAnimator.ofFloat(0f, 100f).apply {
-                        duration = 1000
-                        start()
-                    }.addUpdateListener {
-                        panAzimuth = startAz + (it.animatedValue as Float) * fracAz
-                        panAltitude = startAl + (it.animatedValue as Float) * fracAl
-                        surfaceView.requestRender()
-                    }
+                    setCenter(mass.azimuth, mass.altitude)
                 }
             }
-            masses.add(mMass)
         }
     }
 
@@ -173,10 +164,10 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         // Set the camera position (View matrix)
-        val localSkyRadius = skyRadius * cos(-panAltitude)
+        val localSkyRadius = skyRadius * cos(panAltitude)
         val eyeTargetX = localSkyRadius * cos(panAzimuth)
         val eyeTargetY = localSkyRadius * sin(panAzimuth)
-        val eyeTargetZ = skyRadius * (sin(-panAltitude))
+        val eyeTargetZ = skyRadius * (sin(panAltitude))
         Matrix.setLookAtM(viewMatrix, 0,
                 0f, 0f, 1f,
                 eyeTargetX, eyeTargetY, eyeTargetZ,
@@ -234,8 +225,26 @@ class MyGLRenderer(private val mainActivity: OpenGLES20Activity, private val sur
 
 
         val b = -0.1f
-        Matrix.frustumM(projectionMatrix, 0,
-                -ratio, ratio, zoom * b, zoom * (b + 2f), 5f, 14f)
+        Matrix.frustumM(
+            projectionMatrix, 0,
+            -ratio, ratio, zoom * b, zoom * (b + 2f), 5f, 14f
+        )
+    }
+
+    fun setCenter(lookAtAzimuth: Float, lookAtAltitude: Float) {
+        val startAz = panAzimuth
+        val startAl = panAltitude
+        val fracAz = (lookAtAzimuth - panAzimuth) / 100f
+        val fracAl = ((-lookAtAltitude) - panAltitude) / 100f
+
+        ValueAnimator.ofFloat(0f, 100f).apply {
+            duration = 1000
+            start()
+        }.addUpdateListener {
+            panAzimuth = startAz + (it.animatedValue as Float) * fracAz
+            panAltitude = startAl + (it.animatedValue as Float) * fracAl
+            surfaceView.requestRender()
+        }
     }
 
 }

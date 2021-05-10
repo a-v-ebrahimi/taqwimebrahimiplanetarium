@@ -5,7 +5,7 @@
     android:id="@+id/rootView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".OpenGLES20Activity">
 
     <com.daftar.taqwimplanetarium.LabelsView
         android:id="@+id/labelsView"
@@ -67,5 +67,36 @@
         android:layout_height="36sp"
         android:alpha="0.01"
         android:src="@drawable/m2" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btnSetCenter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:onClick="setCenterClicked"
+            android:text="test setCenter" />
+
+        <Button
+            android:id="@+id/btnSetZoom"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:onClick="setZoomClicked"
+            android:text="test setZoom" />
+
+        <Button
+            android:id="@+id/btnSetLockMass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:onClick="setLockMass"
+            android:text="test setLockMass to Sun" />
+    </LinearLayout>
+
 
 </FrameLayout>
