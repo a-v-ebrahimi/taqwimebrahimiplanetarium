@@ -12,12 +12,16 @@ import kotlin.math.min
 
 
 private const val TOUCH_SCALE_FACTOR: Float = 0.0006f
+const val MASS_SUN = 0
+const val MASS_MOON = 1
 
 class MyGLSurfaceView(
     mainActivity: OpenGLES20Activity,
     massViews: ArrayList<ImageView>, labelsView: LabelsView
 ) : GLSurfaceView(mainActivity) {
 
+
+    var onSurfaceCreated: (() -> Unit)? = null
 
     var zoom: Float
         get() {
@@ -40,7 +44,9 @@ class MyGLSurfaceView(
             mainActivity,
             this,
             massViews, labelsView
-        )
+        ) {
+            onSurfaceCreated?.let { it() }
+        }
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
@@ -94,8 +100,10 @@ class MyGLSurfaceView(
         val x: Float = e.x
         val y: Float = e.y
 
+        setLockMass(-1)
         when (e.action) {
             MotionEvent.ACTION_DOWN -> {
+
                 val buffer: ByteBuffer =
                     ByteBuffer.allocate(4) // 4 = (1 width) * (1 height) * (4 as per RGBA)
 
@@ -144,16 +152,6 @@ class MyGLSurfaceView(
         return true
     }
 
-    fun sunAzimuth(az: Float) {
-        renderer.sunAzimuth = az
-        requestRender()
-    }
-
-    fun setSunAltitude(al: Float) {
-        renderer.sunAltitude = al
-        requestRender()
-    }
-
     fun setCenter(lookAtAzimuth: Float, lookAtAltitude: Float) {
         renderer.setCenter(lookAtAzimuth, lookAtAltitude)
     }
@@ -168,10 +166,8 @@ class MyGLSurfaceView(
         return renderer.lockedMass
     }
 
-    fun setSunAzimuthAltitude(sunAzimuth: Float, sunAltitude: Float) {
-        renderer.sunAzimuth = sunAzimuth
-        renderer.sunAltitude = sunAltitude
-        requestRender()
+    fun setMassAzimuthAltitude(massId: Int, azimuth: Float, altitude: Float) {
+        renderer.setMassAzimuthAltitude(massId, azimuth, altitude)
     }
 
 }

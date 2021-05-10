@@ -10,64 +10,36 @@ import com.daftar.taqwimplanetarium.*
 import kotlin.math.*
 import kotlin.random.Random
 
-// number of coordinates per vertex in this array
 const val COORDS_PER_VERTEX = 3
 
 
 class MyGLRenderer(
-    private val mainActivity: OpenGLES20Activity, private val surfaceView: MyGLSurfaceView,
-    private val massViews: ArrayList<ImageView>, private val labelsView: LabelsView
+    private val mainActivity: OpenGLES20Activity,
+    private val surfaceView: MyGLSurfaceView,
+    private val massViews: ArrayList<ImageView>,
+    private val labelsView: LabelsView,
+    private val onSurfaceCreatedListener: () -> Unit
 ) : GLSurfaceView.Renderer {
     private val skyRadius = 10f
     private val sunVisibleRadius = skyRadius * Math.PI.toFloat() * 0.5f / 180f
 
-    private val halfVScreenInDegrees: Float = Math.PI.toFloat() / 8
     var lockedMass: Int = -1
         set(value) {
             field = value
             if (lockedMass == -1 || lockedMass > masses.size - 1)
                 return
             panAzimuth = masses[lockedMass].azimuth
-            panAltitude = masses[lockedMass].altitude + halfVScreenInDegrees
+            panAltitude = masses[lockedMass].altitude
         }
 
     private var width: Int = 100
     private var height: Int = 100
 
-    var sunAzimuth: Float = 0f
-        set(value) {
-            field = value
-            if (masses.size == 0) return
-            masses[0].setAzimuthAltitude(value, sunAltitude)
-            if (lockedMass == 0) {
-                panAzimuth = sunAzimuth
-                panAltitude = sunAltitude
-            }
-            masses[1].sunRealX = masses[0].sphereX
-            masses[1].sunRealY = masses[0].sphereY
-            masses[1].sunRealZ = masses[0].sphereZ
-            masses[1].recreateSphere()
-        }
-
-    var sunAltitude: Float = 0f
-        set(value) {
-            field = value
-            if (masses.size == 0) return
-            masses[0].setAzimuthAltitude(sunAzimuth, value)
-            if (lockedMass == 0) {
-                panAzimuth = sunAzimuth
-                panAltitude = sunAltitude
-            }
-            masses[1].sunRealX = masses[0].sphereX
-            masses[1].sunRealY = masses[0].sphereY
-            masses[1].sunRealZ = masses[0].sphereZ
-            masses[1].recreateSphere()
-        }
 
     private lateinit var mSkyGrid: SkyGrid
     private lateinit var mHorizon: Horizon
 
-    var masses = arrayListOf<Sphere>()
+    private var masses = arrayListOf<Sphere>()
 
     @Volatile
     var panAzimuth: Float = 0.1f
@@ -97,10 +69,7 @@ class MyGLRenderer(
             sunVisibleRadius,
             floatArrayOf(0.9f, 0.9f, 0.2f, 1f)
         )
-        mSun.setAzimuthAltitude(sunAzimuth, sunAltitude)
 
-        val moonAzimuth = sunAzimuth + 0.3f
-        val moonAltitude = sunAltitude + 0.3f
         val moonVisibleRadius = sunVisibleRadius
         val mMoon = Sphere(
             mainActivity,
@@ -109,19 +78,18 @@ class MyGLRenderer(
             0f, 0f, 0.0f, skyRadius,
             moonVisibleRadius,
             floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
-            sunRealX = mSun!!.sphereX,
-            sunRealY = mSun!!.sphereY,
-            sunRealZ = mSun!!.sphereZ,
+            sunRealX = mSun.sphereX,
+            sunRealY = mSun.sphereY,
+            sunRealZ = mSun.sphereZ,
         )
-        mMoon.setAzimuthAltitude(moonAzimuth, moonAltitude)
 
-        masses.add(mSun!!)
+        masses.add(mSun)
         masses.add(mMoon)
 
         // add random masses
         for (m in 2 until massViews.size) {
             val massView = massViews[m]
-            val massAzimuth = (Random.nextFloat() * Math.PI * 2).toFloat();
+            val massAzimuth = (Random.nextFloat() * Math.PI * 2).toFloat()
             val massAltitude = (Random.nextFloat() * Math.PI - Math.PI / 2).toFloat()
             val massR = sunVisibleRadius * 0.5f
             val mMass = Sphere(
@@ -147,22 +115,28 @@ class MyGLRenderer(
                 }
             }
         }
+        onSurfaceCreatedListener()
     }
 
     private val modelMatrix = FloatArray(16)
 
     override fun onDrawFrame(unused: GL10) {
         // Redraw background color
-        var v = 1f
-        when {
-            sunAltitude > 0 -> v = 1f
-            sunAltitude > -18 * (Math.PI / 180f) -> {
-                v = (sunAltitude * (180f / Math.PI).toFloat() + 18f) / 18f
+        val skyLightness: Float = when {
+            masses[MASS_SUN].altitude > 0 -> 1f
+            masses[MASS_SUN].altitude > -18 * (Math.PI / 180f) -> {
+                (masses[MASS_SUN].altitude * (180f / Math.PI).toFloat() + 18f) / 18f
             }
-            else -> v = 0f
+            else -> 0f
         }
+        labelsView.skyLightness = skyLightness
 
-        GLES20.glClearColor(v * 153f / 255f, v * 204f / 255f, v * 1f, 1.0f)
+        GLES20.glClearColor(
+            skyLightness * 153f / 255f,
+            skyLightness * 204f / 255f,
+            skyLightness * 1f,
+            1.0f
+        )
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         // Set the camera position (View matrix)
@@ -198,7 +172,7 @@ class MyGLRenderer(
 
         val viewArray = intArrayOf(0, 0, width, height)
         mSkyGrid.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
-        mHorizon.draw(scratch, sunAltitude)
+        mHorizon.draw(scratch, masses[MASS_SUN].altitude)
         for (m in masses) {
             m.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
         }
@@ -239,6 +213,24 @@ class MyGLRenderer(
             panAzimuth = startAz + (it.animatedValue as Float) * fracAz
             panAltitude = startAl + (it.animatedValue as Float) * fracAl
             surfaceView.requestRender()
+        }
+    }
+
+    fun setMassAzimuthAltitude(massId: Int, azimuth: Float, altitude: Float) {
+        if (massId < 0 || massId > masses.size - 1)
+            return
+        masses[massId].setAzimuthAltitude(azimuth, altitude)
+        surfaceView.requestRender()
+        if (massId == lockedMass) {
+            panAzimuth = masses[lockedMass].azimuth
+            panAltitude = masses[lockedMass].altitude
+        }
+        if (massId == MASS_SUN) {
+            // sun moved? then recalc moon shadow
+            masses[MASS_MOON].sunRealX = masses[MASS_SUN].sphereX
+            masses[MASS_MOON].sunRealY = masses[MASS_SUN].sphereY
+            masses[MASS_MOON].sunRealZ = masses[MASS_SUN].sphereZ
+            masses[MASS_MOON].recreateSphere()
         }
     }
 

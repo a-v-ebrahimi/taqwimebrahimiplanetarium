@@ -311,7 +311,7 @@ class Sphere(
     fun setAzimuthAltitude(azimuth: Float, altitude: Float) {
         this.azimuth = azimuth
         this.altitude = altitude
-        createSphere()
+        flagRecreationAfterDraw = true
     }
 
     fun recreateSphere() {

@@ -1,5 +1,7 @@
 package com.daftar.taqwimplanetarium
 
+import MASS_MOON
+import MASS_SUN
 import MyGLSurfaceView
 import android.app.Activity
 import android.os.Bundle
@@ -38,14 +40,15 @@ class OpenGLES20Activity : Activity() {
         )
         rootView.addView(openGlSkyView, 0)
 
-        openGlSkyView.sunAzimuth(sunAzimuth)
-        openGlSkyView.setSunAltitude(sunAltitude)
+        openGlSkyView.onSurfaceCreated = {
+            openGlSkyView.setMassAzimuthAltitude(MASS_MOON, Math.PI.toFloat() / 3f, 0f)
+        }
 
         Timer("SettingUp", false).schedule(50, 50) {
             runOnUiThread {
-//                sunAltitude -= 0.001f
+                sunAltitude -= 0.003f
                 sunAzimuth += 0.003f
-                openGlSkyView.setSunAzimuthAltitude(sunAzimuth, sunAltitude)
+                openGlSkyView.setMassAzimuthAltitude(MASS_SUN, sunAzimuth, sunAltitude)
             }
 
         }
@@ -61,7 +64,7 @@ class OpenGLES20Activity : Activity() {
 
     fun setLockMass(view: View) {
         if (openGlSkyView.getLockedMass() == -1) {
-            openGlSkyView.setLockMass(0)
+            openGlSkyView.setLockMass(MASS_SUN)
             (findViewById<Button>(R.id.btnSetLockMass)).text = "Locked to Sun"
         } else {
             openGlSkyView.setLockMass(-1)
