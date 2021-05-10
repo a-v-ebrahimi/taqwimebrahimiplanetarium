@@ -15,23 +15,31 @@ class LabelsView @JvmOverloads constructor(
 ) : View(context, attrs, defStyleAttr) {
 
 
+    var skyLightness: Float = 0.0f
     var list = arrayListOf<LabelXYT>()
     private var textPaint: Paint = Paint()
 
     init {
         val value = resources.displayMetrics.density
 
-        textPaint.color = Color.BLACK
+        if (skyLightness > 0.2)
+            textPaint.color = Color.BLACK
+        else
+            textPaint.color = Color.WHITE
         textPaint.textSize = 8f * value
         textPaint.typeface = Typeface.MONOSPACE
 
     }
 
     override fun onDraw(canvas: Canvas?) {
+
         canvas?.let {
+            if (skyLightness > 0.4)
+                textPaint.color = Color.DKGRAY
+            else
+                textPaint.color = Color.WHITE
             for (label in list)
                 if (label.z2d > 0 && label.x2d > 0 && label.z2d < 1 && label.x2d < width) {
-                    textPaint.color = Color.DKGRAY
                     it.drawText(
                         "${label.azimuth},${label.altitude}",
                         label.x2d,
