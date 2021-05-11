@@ -3,7 +3,6 @@ package com.daftar.taqwimplanetarium
 import COORDS_PER_VERTEX
 import android.opengl.GLES20
 import android.opengl.GLU
-import android.util.Log
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -12,17 +11,17 @@ import kotlin.math.*
 class SkyGrid(
     private val mainActivity: OpenGLES20Activity,
     skyRadius: Float,
-    val labelsView: LabelsView
+    private val labelsView: LabelsView,
 ) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
 
-    val stpV = 5
-    val stpH = 5
-    val stpL = 5
+    private val stpV = 10
+    private val stpH = 10
+    private val stpLineSegments = 5
 
-    var lineCoords: MutableList<Float> = mutableListOf();
-    var lineColors: MutableList<Int> = mutableListOf();
+    private var lineCoords: MutableList<Float> = mutableListOf()
+    private var lineColors: MutableList<Int> = mutableListOf()
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -46,7 +45,7 @@ class SkyGrid(
                 "  gl_FragColor = vColor;" +
                 "}"
 
-    fun loadShader(type: Int, shaderCode: String): Int {
+    private fun loadShader(type: Int, shaderCode: String): Int {
 
         // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
         // or a fragment shader type (GLES20.GL_FRAGMENT_SHADER)
@@ -82,8 +81,7 @@ class SkyGrid(
         labelsView.list.clear()
         for (b in -90 until 90 step stpV)
             for (a in 0 until 360 step stpH)
-                if (abs(b) <= 45 || abs(b) in 46..69 && a % (2 * stpH) == 0 ||
-                    abs(b) in 70..90 && a % (4 * stpH) == 0
+                if (b == 0 || a % 90 == 0
                 ) {
                     val alphaV = Math.PI * b / 180.0f
                     val r = skyRadius * cos(alphaV).toFloat()
@@ -92,26 +90,30 @@ class SkyGrid(
                     val alpha = Math.PI * a / 180.0
                     val x = r * cos(alpha).toFloat()
                     val y = r * sin(alpha).toFloat()
-                    labelsView.list.add(LabelXYT(x, y, z, "$a", "$b"))
+                    val label = when {
+                        a == 0 && b == 0 -> "0,0"
+                        b == 0 -> "$a"
+                        b > 0 && a % 90 == 0 -> "$b"
+                        else -> ""
+                    }
+                    if (label.isNotEmpty()) {
+                        labelsView.list.add(LabelXYT(x, y, z, label))
+                    }
                 }
         // horizontal lines
         for (b in -90..90 step stpV)
-            for (a in 0 until 360 step stpL) {
+            for (a in 0 until 360 step stpLineSegments) {
                 val alphaV = Math.PI * b / 180.0f
-                val alphaVN = Math.PI * (b + stpV) / 180.0f
 
                 val r = skyRadius * cos(alphaV).toFloat()
-                val rN = skyRadius * cos(alphaVN).toFloat()
-
                 val z = skyRadius * sin(alphaV).toFloat()
-                val zN = skyRadius * sin(alphaVN).toFloat()
 
                 val alpha = Math.PI * a / 180.0
                 val x = r * cos(alpha).toFloat()
                 val y = r * sin(alpha).toFloat()
                 val p1 = arrayOf(x, y, z)
 
-                val alpha2 = Math.PI * (a + stpL) / 180.0
+                val alpha2 = Math.PI * (a + stpLineSegments) / 180.0
                 val x2 = r * cos(alpha2).toFloat()
                 val y2 = r * sin(alpha2).toFloat()
                 val p2 = arrayOf(x2, y2, z)
@@ -123,29 +125,21 @@ class SkyGrid(
 
             }
 
-        for (b in -90..90 step stpL)
-            for (a in 0 until 360 step stpH)
-                if (abs(b) <= 45 || abs(b) in 46..69 && a % (2 * stpH) == 0 ||
-                    abs(b) in 70..90 && a % (4 * stpH) == 0
-                ) {
-                    val alphaV = Math.PI * b / 180.0f
-                    val alphaVN = Math.PI * (b + stpL) / 180.0f
+        for (b in -90..90 step stpLineSegments)
+            for (a in 0 until 360 step stpH) {
+                val alphaV = Math.PI * b / 180.0f
+                val alphaVN = Math.PI * (b + stpLineSegments) / 180.0f
 
-                    val r = skyRadius * cos(alphaV).toFloat()
-                    val rN = skyRadius * cos(alphaVN).toFloat()
+                val r = skyRadius * cos(alphaV).toFloat()
+                val rN = skyRadius * cos(alphaVN).toFloat()
 
-                    val z = skyRadius * sin(alphaV).toFloat()
-                    val zN = skyRadius * sin(alphaVN).toFloat()
+                val z = skyRadius * sin(alphaV).toFloat()
+                val zN = skyRadius * sin(alphaVN).toFloat()
 
                     val alpha = Math.PI * a / 180.0
                     val x = r * cos(alpha).toFloat()
                     val y = r * sin(alpha).toFloat()
                     val p1 = arrayOf(x, y, z)
-
-                    val alpha2 = Math.PI * (a + stpH) / 180.0
-                    val x2 = r * cos(alpha2).toFloat()
-                    val y2 = r * sin(alpha2).toFloat()
-                    val p2 = arrayOf(x2, y2, z)
 
                     val xn = rN * cos(alpha).toFloat()
                     val yn = rN * sin(alpha).toFloat()
@@ -157,7 +151,7 @@ class SkyGrid(
 
                 }
 
-        vertexCount = lineCoords.size / COORDS_PER_VERTEX;
+        vertexCount = lineCoords.size / COORDS_PER_VERTEX
         vertexBuffer =
                 // (number of coordinate values * 4 bytes per float)
             ByteBuffer.allocateDirect(lineCoords.size * 4).run {
@@ -197,7 +191,7 @@ class SkyGrid(
 
 
         for (label in labelsView.list) {
-            var output = floatArrayOf(0f, 0f, 0f)
+            val output = floatArrayOf(0f, 0f, 0f)
             GLU.gluProject(
                 label.x, label.y, label.z,
                 modelViewMatrix, 0, projectionMatrix, 0, view, 0,

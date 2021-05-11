@@ -6,8 +6,8 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.util.AttributeSet
-import android.util.DisplayMetrics
 import android.view.View
+import kotlin.math.max
 
 
 class LabelsView @JvmOverloads constructor(
@@ -26,7 +26,7 @@ class LabelsView @JvmOverloads constructor(
             textPaint.color = Color.BLACK
         else
             textPaint.color = Color.WHITE
-        textPaint.textSize = 8f * value
+        textPaint.textSize = max(20f, 8f * value)
         textPaint.typeface = Typeface.MONOSPACE
 
     }
@@ -34,14 +34,14 @@ class LabelsView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas?) {
 
         canvas?.let {
-            if (skyLightness > 0.4)
+            if (skyLightness > 0.6)
                 textPaint.color = Color.DKGRAY
             else
                 textPaint.color = Color.WHITE
             for (label in list)
                 if (label.z2d > 0 && label.x2d > 0 && label.z2d < 1 && label.x2d < width) {
                     it.drawText(
-                        "${label.azimuth},${label.altitude}",
+                        label.label,
                         label.x2d,
                         height - label.y2d - 10,
                         textPaint
