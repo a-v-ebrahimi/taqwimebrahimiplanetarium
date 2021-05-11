@@ -87,13 +87,13 @@ class SkyGrid(
                     val r = skyRadius * cos(alphaV).toFloat()
                     val z = skyRadius * sin(alphaV).toFloat()
 
-                    val alpha = Math.PI * a / 180.0
+                    val alpha = -Math.PI * a / 180.0
                     val x = r * cos(alpha).toFloat()
                     val y = r * sin(alpha).toFloat()
                     val label = when {
                         a == 0 && b == 0 -> "0,0"
                         b == 0 -> "$a"
-                        b > 0 && a % 90 == 0 -> "$b"
+                        b != 0 && a % 90 == 0 -> "$b"
                         else -> ""
                     }
                     if (label.isNotEmpty()) {

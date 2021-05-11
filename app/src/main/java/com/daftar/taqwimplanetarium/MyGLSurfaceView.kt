@@ -1,4 +1,5 @@
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.util.Log
@@ -8,6 +9,7 @@ import android.view.ScaleGestureDetector.OnScaleGestureListener
 import android.widget.ImageView
 import com.daftar.taqwimplanetarium.LabelsView
 import com.daftar.taqwimplanetarium.OpenGLES20Activity
+import com.daftar.taqwimplanetarium.Sphere
 import java.nio.ByteBuffer
 import kotlin.math.max
 import kotlin.math.min
@@ -19,9 +21,11 @@ const val MASS_MOON = 1
 var busyScaling = false
 var lastScaleTime = 0L
 
+@SuppressLint("ViewConstructor")
 class MyGLSurfaceView(
     mainActivity: OpenGLES20Activity,
-    massViews: ArrayList<ImageView>, labelsView: LabelsView
+    massViews: ArrayList<ImageView>, labelsView: LabelsView,
+    onMassClicked: ((massID: Int) -> Unit)? = null
 ) : GLSurfaceView(mainActivity) {
 
 
@@ -53,14 +57,14 @@ class MyGLSurfaceView(
         renderer = MyGLRenderer(
             mainActivity,
             this,
-            massViews, labelsView
+            massViews, labelsView, onMassClicked
         ) {
             onSurfaceCreated?.let { it() }
         }
 
         // Set the Renderer for drawing on the GLSurfaceView
         setRenderer(renderer)
-        renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+        renderMode = RENDERMODE_WHEN_DIRTY
 
     }
 
@@ -142,8 +146,8 @@ class MyGLSurfaceView(
             }
             MotionEvent.ACTION_MOVE -> {
 
-                var dx: Float = x - previousX
-                var dy: Float = y - previousY
+                val dx: Float = x - previousX
+                val dy: Float = y - previousY
 
 
                 if (e.pointerCount == 1) {
@@ -191,6 +195,10 @@ class MyGLSurfaceView(
 
     fun setMassAzimuthAltitude(massId: Int, azimuth: Float, altitude: Float) {
         renderer.setMassAzimuthAltitude(massId, azimuth, altitude)
+    }
+
+    fun getMass(massId: Int): Sphere {
+        return renderer.getMass(massId)
     }
 
 }

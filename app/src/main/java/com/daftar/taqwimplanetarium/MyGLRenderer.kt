@@ -18,7 +18,8 @@ class MyGLRenderer(
     private val surfaceView: MyGLSurfaceView,
     private val massViews: ArrayList<ImageView>,
     private val labelsView: LabelsView,
-    private val onSurfaceCreatedListener: () -> Unit
+    private val massClickedListener: ((massID: Int) -> Unit)?,
+    private val onSurfaceCreatedListener: (() -> Unit)?
 ) : GLSurfaceView.Renderer {
     private val skyRadius = 10f
     private val sunVisibleRadius = skyRadius * Math.PI.toFloat() * 0.5f / 180f
@@ -111,11 +112,14 @@ class MyGLRenderer(
             val mass = masses[m]
             mainActivity.runOnUiThread {
                 massView.setOnClickListener {
-                    setCenter(mass.azimuth, mass.altitude)
+                    massClickedListener?.let {
+                        it(m)
+                    }
+
                 }
             }
         }
-        onSurfaceCreatedListener()
+        onSurfaceCreatedListener?.let { it() }
     }
 
     private val modelMatrix = FloatArray(16)
@@ -232,6 +236,10 @@ class MyGLRenderer(
             masses[MASS_MOON].sunRealZ = masses[MASS_SUN].sphereZ
             masses[MASS_MOON].recreateSphere()
         }
+    }
+
+    fun getMass(massId: Int): Sphere {
+        return masses[massId]
     }
 
 }

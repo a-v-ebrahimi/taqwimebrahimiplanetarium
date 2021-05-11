@@ -9,12 +9,13 @@ import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
-import java.util.*
-import kotlin.concurrent.schedule
+import android.widget.TextView
 
 class OpenGLES20Activity : Activity() {
 
     lateinit var openGlSkyView: MyGLSurfaceView
+    var sunAzimuth: Float = (Math.PI / 16).toFloat()
+    var sunAltitude: Float = (Math.PI / 3).toFloat()
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +36,13 @@ class OpenGLES20Activity : Activity() {
         openGlSkyView = MyGLSurfaceView(
             this,
             massViews, findViewById<LabelsView>(R.id.labelsView)
-        )
+        ) {
+            val infoPanel = findViewById<TextView>(R.id.infoPanel)
+            var mass = openGlSkyView.getMass(it)
+            infoPanel.text =
+                "selected mass : $it, azimuth : ${mass.azimuth}, altitude ; ${mass.altitude}"
+            openGlSkyView.setLockMass(it)
+        }
         rootView.addView(openGlSkyView, 0)
 
         openGlSkyView.onSurfaceCreated = {
