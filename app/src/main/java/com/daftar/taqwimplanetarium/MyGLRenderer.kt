@@ -46,7 +46,7 @@ class MyGLRenderer(
     var panAltitude: Float = Math.PI.toFloat() / 4f
     var zoom: Float = 45f
         set(value) {
-            field = value
+            field = min(45f, max(1f, value))
             updateViewport(this.width, this.height)
         }
 

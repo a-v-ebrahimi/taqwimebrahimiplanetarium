@@ -15,8 +15,6 @@ import kotlin.concurrent.schedule
 class OpenGLES20Activity : Activity() {
 
     lateinit var openGlSkyView: MyGLSurfaceView
-    var sunAzimuth: Float = (Math.PI / 16).toFloat()
-    var sunAltitude: Float = (Math.PI / 3).toFloat()
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,14 +42,14 @@ class OpenGLES20Activity : Activity() {
             openGlSkyView.setMassAzimuthAltitude(MASS_MOON, Math.PI.toFloat() / 3f, 0f)
         }
 
-        Timer("SettingUp", false).schedule(50, 50) {
-            runOnUiThread {
-                sunAltitude -= 0.003f
-                sunAzimuth += 0.003f
-                openGlSkyView.setMassAzimuthAltitude(MASS_SUN, sunAzimuth, sunAltitude)
-            }
-
-        }
+//        Timer("SettingUp", false).schedule(50, 50) {
+//            runOnUiThread {
+//                sunAltitude -= 0.003f
+//                sunAzimuth += 0.003f
+//                openGlSkyView.setMassAzimuthAltitude(MASS_SUN, sunAzimuth, sunAltitude)
+//            }
+//
+//        }
     }
 
     fun setCenterClicked(view: View) {
@@ -73,10 +71,10 @@ class OpenGLES20Activity : Activity() {
     }
 
     fun onZoomOut(view: View) {
-        openGlSkyView.zoom = openGlSkyView.zoom + 5
+        openGlSkyView.zoom = openGlSkyView.zoom + 10
     }
 
     fun onZoomIn(view: View) {
-        openGlSkyView.zoom = openGlSkyView.zoom - 5
+        openGlSkyView.zoom = openGlSkyView.zoom - 10
     }
 }
