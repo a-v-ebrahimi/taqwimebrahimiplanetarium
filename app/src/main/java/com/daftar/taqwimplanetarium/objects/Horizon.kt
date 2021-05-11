@@ -1,10 +1,10 @@
-package com.daftar.taqwimplanetarium
+package com.daftar.taqwimplanetarium.objects
 
-import COORDS_PER_VERTEX
 import android.opengl.GLES20.GL_ONE_MINUS_SRC_ALPHA
 import android.opengl.GLES20
 import android.opengl.GLES20.GL_BLEND
 import android.opengl.GLES20.GL_SRC_ALPHA
+import com.daftar.taqwimplanetarium.views.COORDS_PER_VERTEX
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -12,38 +12,38 @@ import kotlin.math.*
 
 
 class Horizon(
-        private val skyRadius: Float
+    skyRadius: Float
 
 ) {
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
-    var triangleCoords: MutableList<Float> = mutableListOf()
-    var triangleColors: MutableList<Float> = mutableListOf()
+    private var triangleCoords: MutableList<Float> = mutableListOf()
+    private var triangleColors: MutableList<Float> = mutableListOf()
     private val horizonColor = floatArrayOf(0f, 0f, 0f, 0.2f)
 
     private val stp = 9
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
-            // the coordinates of the objects that use this vertex shader
-            "uniform mat4 uMVPMatrix;" +
-                    "attribute vec4 vPosition;" +
-                    "void main() {" +
-                    // the matrix must be included as a modifier of gl_Position
-                    // Note that the uMVPMatrix factor *must be first* in order
-                    // for the matrix multiplication product to be correct.
-                    "  gl_Position = uMVPMatrix * vPosition;" +
-                    "}"
+        // the coordinates of the objects that use this vertex shader
+        "uniform mat4 uMVPMatrix;" +
+                "attribute vec4 vPosition;" +
+                "void main() {" +
+                // the matrix must be included as a modifier of gl_Position
+                // Note that the uMVPMatrix factor *must be first* in order
+                // for the matrix multiplication product to be correct.
+                "  gl_Position = uMVPMatrix * vPosition;" +
+                "}"
 
     // Use to access and set the view transformation
     private var vPMatrixHandle: Int = 0
 
     private val fragmentShaderCode =
-            "precision mediump float;" +
-                    "uniform vec4 vColor;" +
-                    "void main() {" +
-                    "  gl_FragColor = vColor;" +
-                    "}"
+        "precision mediump float;" +
+                "uniform vec4 vColor;" +
+                "void main() {" +
+                "  gl_FragColor = vColor;" +
+                "}"
 
     private fun loadShader(type: Int, shaderCode: String): Int {
 
@@ -107,21 +107,21 @@ class Horizon(
 
         }
 
-        vertexCount = triangleCoords.size / COORDS_PER_VERTEX;
+        vertexCount = triangleCoords.size / COORDS_PER_VERTEX
         vertexBuffer =
                 // (number of coordinate values * 4 bytes per float)
-                ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
-                    // use the device hardware's native byte order
-                    order(ByteOrder.nativeOrder())
+            ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
+                // use the device hardware's native byte order
+                order(ByteOrder.nativeOrder())
 
-                    // create a floating point buffer from the ByteBuffer
-                    asFloatBuffer().apply {
-                        // add the coordinates to the FloatBuffer
-                        put(triangleCoords.toFloatArray())
-                        // set the buffer to read the first coordinate
-                        position(0)
-                    }
+                // create a floating point buffer from the ByteBuffer
+                asFloatBuffer().apply {
+                    // add the coordinates to the FloatBuffer
+                    put(triangleCoords.toFloatArray())
+                    // set the buffer to read the first coordinate
+                    position(0)
                 }
+            }
     }
 
     // Set color with red, green, blue and alpha (opacity) values
@@ -131,12 +131,12 @@ class Horizon(
 
     private val vertexStride: Int = COORDS_PER_VERTEX * 4 // 4 bytes per vertex
 
-    fun draw(mvpMatrix: FloatArray, sunAltitude: Float) {
+    fun draw(mvpMatrix: FloatArray) {
         // Add program to OpenGL ES environment
         GLES20.glUseProgram(mProgram)
 
-        GLES20.glEnable(GL_BLEND);
-        GLES20.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        GLES20.glEnable(GL_BLEND)
+        GLES20.glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         // get handle to shape's transformation matrix
         vPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix")
@@ -152,12 +152,12 @@ class Horizon(
 
             // Prepare the triangle coordinate data
             GLES20.glVertexAttribPointer(
-                    it,
-                    COORDS_PER_VERTEX,
-                    GLES20.GL_FLOAT,
-                    false,
-                    vertexStride,
-                    vertexBuffer
+                it,
+                COORDS_PER_VERTEX,
+                GLES20.GL_FLOAT,
+                false,
+                vertexStride,
+                vertexBuffer
             )
 
             // get handle to fragment shader's vColor member

@@ -1,12 +1,16 @@
-import android.animation.ValueAnimator
-import javax.microedition.khronos.egl.EGLConfig
-import javax.microedition.khronos.opengles.GL10
+package com.daftar.taqwimplanetarium.views
 
+import android.animation.ValueAnimator
+import android.app.Activity
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
-import android.widget.ImageView
-import com.daftar.taqwimplanetarium.*
+import com.daftar.taqwimplanetarium.objects.Horizon
+import com.daftar.taqwimplanetarium.views.LabelsView
+import com.daftar.taqwimplanetarium.objects.SkyGrid
+import com.daftar.taqwimplanetarium.objects.Sphere
+import javax.microedition.khronos.egl.EGLConfig
+import javax.microedition.khronos.opengles.GL10
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -14,11 +18,9 @@ const val COORDS_PER_VERTEX = 3
 
 
 class MyGLRenderer(
-    private val mainActivity: OpenGLES20Activity,
+    private val mainActivity: Activity,
     private val surfaceView: MyGLSurfaceView,
-    private val massViews: ArrayList<ImageView>,
     private val labelsView: LabelsView,
-    private val massClickedListener: ((massID: Int) -> Unit)?,
     private val onSurfaceCreatedListener: (() -> Unit)?
 ) : GLSurfaceView.Renderer {
     private val skyRadius = 10f
@@ -52,8 +54,6 @@ class MyGLRenderer(
         }
 
 
-
-
     override fun onSurfaceCreated(unused: GL10, config: EGLConfig) {
         // Set the background frame color
 
@@ -63,9 +63,7 @@ class MyGLRenderer(
         mHorizon = Horizon(skyRadius)
 
         val mSun = Sphere(
-            mainActivity,
-            "sun",
-            massViews[0], 12,
+            MASS_SUN,
             0f, 0f, 0.0f, skyRadius,
             sunVisibleRadius,
             floatArrayOf(0.9f, 0.9f, 0.2f, 1f)
@@ -73,9 +71,7 @@ class MyGLRenderer(
 
         val moonVisibleRadius = sunVisibleRadius
         val mMoon = Sphere(
-            mainActivity,
-            "moon",
-            massViews[1], 12,
+            MASS_MOON,
             0f, 0f, 0.0f, skyRadius,
             moonVisibleRadius,
             floatArrayOf(0.9f, 0.9f, 0.9f, 1f), isThisMoon = true,
@@ -88,15 +84,12 @@ class MyGLRenderer(
         masses.add(mMoon)
 
         // add random masses
-        for (m in 2 until massViews.size) {
-            val massView = massViews[m]
+        for (m in 2 until 8) {
             val massAzimuth = (Random.nextFloat() * Math.PI * 2).toFloat()
             val massAltitude = (Random.nextFloat() * Math.PI - Math.PI / 2).toFloat()
             val massR = sunVisibleRadius * 0.5f
             val mMass = Sphere(
-                mainActivity,
-                "mass",
-                massView, 18,
+                m,
                 0f, 0f, 0.0f, skyRadius,
                 massR,
                 floatArrayOf(0.9f, 0.9f, 0.9f, 1f)
@@ -107,18 +100,6 @@ class MyGLRenderer(
             masses.add(mMass)
         }
 
-        for (m in 0 until masses.size) {
-            val massView = massViews[m]
-            val mass = masses[m]
-            mainActivity.runOnUiThread {
-                massView.setOnClickListener {
-                    massClickedListener?.let {
-                        it(m)
-                    }
-
-                }
-            }
-        }
         onSurfaceCreatedListener?.let { it() }
     }
 
@@ -145,13 +126,15 @@ class MyGLRenderer(
 
         // Set the camera position (View matrix)
         val localSkyRadius = skyRadius * cos(panAltitude)
-        val eyeTargetX = localSkyRadius * cos(panAzimuth)
-        val eyeTargetY = localSkyRadius * sin(panAzimuth)
+        val eyeTargetX = localSkyRadius * cos(-panAzimuth)
+        val eyeTargetY = localSkyRadius * sin(-panAzimuth)
         val eyeTargetZ = skyRadius * (sin(panAltitude))
-        Matrix.setLookAtM(viewMatrix, 0,
-                0f, 0f, 1f,
-                eyeTargetX, eyeTargetY, eyeTargetZ,
-                0f, 0.0f, 1.0f)
+        Matrix.setLookAtM(
+            viewMatrix, 0,
+            0f, 0f, 1f,
+            eyeTargetX, eyeTargetY, eyeTargetZ,
+            0f, 0.0f, 1.0f
+        )
 
         // Create a rotation transformation for the triangle
         val angle = 0f//panAzimuth+ 0.010f * time.toInt()
@@ -176,7 +159,7 @@ class MyGLRenderer(
 
         val viewArray = intArrayOf(0, 0, width, height)
         mSkyGrid.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
-        mHorizon.draw(scratch, masses[MASS_SUN].altitude)
+        mHorizon.draw(scratch)
         for (m in masses) {
             m.draw(scratch, modelViewMatrix, viewArray, projectionMatrix)
         }
@@ -238,8 +221,20 @@ class MyGLRenderer(
         }
     }
 
-    fun getMass(massId: Int): Sphere {
+    fun getMass(massId: Int): Sphere? {
+        if (massId < 0 || massId > masses.size - 1)
+            return null
         return masses[massId]
+    }
+
+    fun findMassAt2DXY(x: Float, y: Float): Int {
+        val yH = height - y
+        for (m in 0 until masses.size) {
+            val mass = masses[m]
+            if (abs(x - mass.last2Dx) < 10 && abs(yH - mass.last2Dy) < 10)
+                return m
+        }
+        return -1
     }
 
 }

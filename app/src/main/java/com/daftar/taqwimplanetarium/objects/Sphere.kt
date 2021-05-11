@@ -1,22 +1,19 @@
-package com.daftar.taqwimplanetarium
+package com.daftar.taqwimplanetarium.objects
 
-import COORDS_PER_VERTEX
 import android.opengl.GLES20
 import android.opengl.GLU
 import android.util.Log
-import android.widget.FrameLayout
-import android.widget.ImageView
+import com.daftar.taqwimplanetarium.views.COORDS_PER_VERTEX
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
-import kotlin.math.*
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 
 class Sphere(
-    private val mainActivity: OpenGLES20Activity,
-    private val name: String,
-    private val imageOn2dScreen: ImageView?,
-    private val imageSizeRatio: Int,
+    val massID: Int,
     private val spaceX: Float, private val spaceY: Float, private val spaceZ: Float,
     private val spaceR: Float,
     private val sphereR: Float,
@@ -29,8 +26,8 @@ class Sphere(
     private var flagRecreationAfterDraw: Boolean = false
     private var vertexCount: Int = 0
     private var vertexBuffer: FloatBuffer
-    var triangleCoords: MutableList<Float> = mutableListOf();
-    var triangleColors: MutableList<Float> = mutableListOf();
+    var triangleCoords: MutableList<Float> = mutableListOf()
+    var triangleColors: MutableList<Float> = mutableListOf()
 
     var azimuth: Float = 0f
     var altitude: Float = 0f
@@ -40,6 +37,9 @@ class Sphere(
     var sphereY = 0f
     var sphereZ = 0f
     private val stp = 9
+
+    var last2Dx = -1f
+    var last2Dy = -1f
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -115,8 +115,8 @@ class Sphere(
         triangleColors.clear()
 
         val localR = spaceR * cos(altitude)
-        sphereX = spaceX + localR * cos(azimuth)
-        sphereY = spaceY + localR * sin(azimuth)
+        sphereX = spaceX + localR * cos(-azimuth)
+        sphereY = spaceY + localR * sin(-azimuth)
         sphereZ = spaceZ + spaceR * sin(altitude)
 
         val distanceToSun = sqrt(
@@ -174,7 +174,7 @@ class Sphere(
                 triangleColors.add(ds2)
             }
 
-        vertexCount = triangleCoords.size / COORDS_PER_VERTEX;
+        vertexCount = triangleCoords.size / COORDS_PER_VERTEX
         vertexBuffer =
                 // (number of coordinate values * 4 bytes per float)
             ByteBuffer.allocateDirect(triangleCoords.size * 4).run {
@@ -225,30 +225,13 @@ class Sphere(
         // Pass the projection and view transformation to the shader
         GLES20.glUniformMatrix4fv(vPMatrixHandle, 1, false, mvpMatrix, 0)
 
-        var output = floatArrayOf(0f, 0f, 0f)
+        val output = floatArrayOf(0f, 0f, 0f)
         GLU.gluProject(
             sphereX, sphereY, sphereZ, modelViewMatrix, 0, projectionMatrix, 0, view, 0,
             output, 0
         )
-        if (imageOn2dScreen != null) {
-            mainActivity.runOnUiThread {
-                val w = min(
-                    mainActivity.openGlSkyView.height,
-                    mainActivity.openGlSkyView.width
-                ) / imageSizeRatio
-                val params = FrameLayout.LayoutParams(
-                    w, w
-                )
-                params.setMargins(
-                    output[0].toInt() - w / 2,
-                    mainActivity.openGlSkyView.height - output[1].toInt() - w / 2,
-                    0,
-                    0
-                )
-                imageOn2dScreen.layoutParams = params
-            }
-        }
-
+        last2Dx = output[0]
+        last2Dy = output[1]
 
         // get handle to vertex shader's vPosition member
         positionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition").also {

@@ -1,4 +1,4 @@
-package com.daftar.taqwimplanetarium
+package com.daftar.taqwimplanetarium.model
 
 class LabelXYT(
     var x: Float,

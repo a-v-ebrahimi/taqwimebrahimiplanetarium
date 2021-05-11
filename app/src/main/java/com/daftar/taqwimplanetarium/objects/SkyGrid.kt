@@ -1,15 +1,18 @@
-package com.daftar.taqwimplanetarium
+package com.daftar.taqwimplanetarium.objects
 
-import COORDS_PER_VERTEX
+import android.app.Activity
 import android.opengl.GLES20
 import android.opengl.GLU
+import com.daftar.taqwimplanetarium.model.LabelXYT
+import com.daftar.taqwimplanetarium.views.COORDS_PER_VERTEX
+import com.daftar.taqwimplanetarium.views.LabelsView
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import kotlin.math.*
 
 class SkyGrid(
-    private val mainActivity: OpenGLES20Activity,
+    private val mainActivity: Activity,
     skyRadius: Float,
     private val labelsView: LabelsView,
 ) {

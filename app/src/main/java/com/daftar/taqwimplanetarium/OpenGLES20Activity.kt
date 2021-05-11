@@ -1,54 +1,25 @@
 package com.daftar.taqwimplanetarium
 
-import MASS_MOON
-import MASS_SUN
-import MyGLSurfaceView
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
+import com.daftar.taqwimplanetarium.views.MASS_SUN
+import com.daftar.taqwimplanetarium.views.TaqwimPlanetariumView
 
+@Suppress("UNUSED_PARAMETER")
 class OpenGLES20Activity : Activity() {
 
-    lateinit var openGlSkyView: MyGLSurfaceView
+    private lateinit var taqwimPlanetariumView: TaqwimPlanetariumView
     var sunAzimuth: Float = (Math.PI / 16).toFloat()
     var sunAltitude: Float = (Math.PI / 3).toFloat()
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Create a GLSurfaceView instance and set it
-        // as the ContentView for this Activity.
         setContentView(R.layout.activity_main)
-        val rootView = findViewById<FrameLayout>(R.id.rootView)
-        val massViews = arrayListOf<ImageView>()
-        massViews.add(findViewById(R.id.sunImage))
-        massViews.add(findViewById(R.id.moonImage))
-        massViews.add(findViewById(R.id.mass1))
-        massViews.add(findViewById(R.id.mass2))
-        massViews.add(findViewById(R.id.mass3))
-        massViews.add(findViewById(R.id.mass4))
-        massViews.add(findViewById(R.id.mass5))
-        massViews.add(findViewById(R.id.mass6))
-        openGlSkyView = MyGLSurfaceView(
-            this,
-            massViews, findViewById<LabelsView>(R.id.labelsView)
-        ) {
-            val infoPanel = findViewById<TextView>(R.id.infoPanel)
-            var mass = openGlSkyView.getMass(it)
-            infoPanel.text =
-                "selected mass : $it, azimuth : ${mass.azimuth}, altitude ; ${mass.altitude}"
-            openGlSkyView.setLockMass(it)
-        }
-        rootView.addView(openGlSkyView, 0)
-
-        openGlSkyView.onSurfaceCreated = {
-            openGlSkyView.setMassAzimuthAltitude(MASS_MOON, Math.PI.toFloat() / 3f, 0f)
-        }
-
+        taqwimPlanetariumView = findViewById<TaqwimPlanetariumView>(R.id.taqwimPlanetariumView)
 //        Timer("SettingUp", false).schedule(50, 50) {
 //            runOnUiThread {
 //                sunAltitude -= 0.003f
@@ -60,28 +31,29 @@ class OpenGLES20Activity : Activity() {
     }
 
     fun setCenterClicked(view: View) {
-        openGlSkyView.setCenter(0f, 0f)
+        taqwimPlanetariumView.openGlSkyView.setCenter(0f, 0f)
     }
 
     fun setZoomClicked(view: View) {
-        openGlSkyView.zoom = 30f
+        taqwimPlanetariumView.openGlSkyView.zoom = 30f
     }
 
+    @SuppressLint("SetTextI18n")
     fun setLockMass(view: View) {
-        if (openGlSkyView.getLockedMass() == -1) {
-            openGlSkyView.setLockMass(MASS_SUN)
+        if (taqwimPlanetariumView.openGlSkyView.getLockedMass() == -1) {
+            taqwimPlanetariumView.openGlSkyView.setLockMass(MASS_SUN)
             (findViewById<Button>(R.id.btnSetLockMass)).text = "Locked to Sun"
         } else {
-            openGlSkyView.setLockMass(-1)
+            taqwimPlanetariumView.openGlSkyView.setLockMass(-1)
             (findViewById<Button>(R.id.btnSetLockMass)).text = "Not Locked"
         }
     }
 
     fun onZoomOut(view: View) {
-        openGlSkyView.zoom = openGlSkyView.zoom + 10
+        taqwimPlanetariumView.openGlSkyView.zoom = taqwimPlanetariumView.openGlSkyView.zoom + 10
     }
 
     fun onZoomIn(view: View) {
-        openGlSkyView.zoom = openGlSkyView.zoom - 10
+        taqwimPlanetariumView.openGlSkyView.zoom = taqwimPlanetariumView.openGlSkyView.zoom - 10
     }
 }

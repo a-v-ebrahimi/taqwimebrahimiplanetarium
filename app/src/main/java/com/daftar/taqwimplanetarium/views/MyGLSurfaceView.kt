@@ -1,16 +1,15 @@
+package com.daftar.taqwimplanetarium.views
+
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
-import android.opengl.GLES20
+import android.app.Activity
 import android.opengl.GLSurfaceView
 import android.util.Log
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
-import android.widget.ImageView
-import com.daftar.taqwimplanetarium.LabelsView
-import com.daftar.taqwimplanetarium.OpenGLES20Activity
-import com.daftar.taqwimplanetarium.Sphere
-import java.nio.ByteBuffer
+import com.daftar.taqwimplanetarium.views.LabelsView
+import com.daftar.taqwimplanetarium.objects.Sphere
 import kotlin.math.max
 import kotlin.math.min
 
@@ -23,9 +22,9 @@ var lastScaleTime = 0L
 
 @SuppressLint("ViewConstructor")
 class MyGLSurfaceView(
-    mainActivity: OpenGLES20Activity,
-    massViews: ArrayList<ImageView>, labelsView: LabelsView,
-    onMassClicked: ((massID: Int) -> Unit)? = null
+    mainActivity: Activity,
+    labelsView: LabelsView,
+    private var onMassClicked: ((massID: Int) -> Unit)? = null
 ) : GLSurfaceView(mainActivity) {
 
 
@@ -57,7 +56,7 @@ class MyGLSurfaceView(
         renderer = MyGLRenderer(
             mainActivity,
             this,
-            massViews, labelsView, onMassClicked
+            labelsView
         ) {
             onSurfaceCreated?.let { it() }
         }
@@ -73,7 +72,7 @@ class MyGLSurfaceView(
 
     class ScaleDetectorListener(
         private val myGLSurfaceView: MyGLSurfaceView,
-        val renderer: MyGLRenderer
+        private val renderer: MyGLRenderer
     ) :
         OnScaleGestureListener {
         private var sizeCoef: Float = 1f
@@ -114,10 +113,9 @@ class MyGLSurfaceView(
         }
     )
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        if (mDetector.onTouchEvent(e)) {
-//            return true;
-        }
+        mDetector.onTouchEvent(e)
         if (busyScaling || System.currentTimeMillis() - lastScaleTime < 500)
             return true
         // MotionEvent reports input details from the touch screen
@@ -130,19 +128,8 @@ class MyGLSurfaceView(
         setLockMass(-1)
         when (e.action) {
             MotionEvent.ACTION_DOWN -> {
-
-                val buffer: ByteBuffer =
-                    ByteBuffer.allocate(4) // 4 = (1 width) * (1 height) * (4 as per RGBA)
-
-                GLES20.glReadPixels(
-                    x.toInt(),
-                    y.toInt(),
-                    1,
-                    1,
-                    GLES20.GL_RGBA,
-                    GLES20.GL_UNSIGNED_BYTE,
-                    buffer
-                )
+                val selected = renderer.findMassAt2DXY(x, y)
+                onMassClicked?.let { it(selected) }
             }
             MotionEvent.ACTION_MOVE -> {
 
@@ -161,14 +148,13 @@ class MyGLSurfaceView(
 //                        dy *= -1
 //                    }
 
-                    renderer.panAzimuth += dx * TOUCH_SCALE_FACTOR
+                    renderer.panAzimuth -= dx * TOUCH_SCALE_FACTOR
                     renderer.panAltitude += dy * TOUCH_SCALE_FACTOR
 
                     renderer.panAltitude = max(
                         -(Math.PI / 2).toFloat(),
                         min(renderer.panAltitude, (Math.PI / 2).toFloat())
                     )
-                } else if (e.pointerCount == 2) {
                 }
                 requestRender()
             }
@@ -197,7 +183,7 @@ class MyGLSurfaceView(
         renderer.setMassAzimuthAltitude(massId, azimuth, altitude)
     }
 
-    fun getMass(massId: Int): Sphere {
+    fun getMass(massId: Int): Sphere? {
         return renderer.getMass(massId)
     }
 
