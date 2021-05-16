@@ -8,13 +8,11 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
-import com.daftar.taqwimplanetarium.views.LabelsView
 import com.daftar.taqwimplanetarium.objects.Sphere
 import kotlin.math.max
 import kotlin.math.min
 
 
-private const val TOUCH_SCALE_FACTOR: Float = 0.0006f
 const val MASS_SUN = 0
 const val MASS_MOON = 1
 var busyScaling = false
@@ -24,6 +22,7 @@ var lastScaleTime = 0L
 class MyGLSurfaceView(
     mainActivity: Activity,
     labelsView: LabelsView,
+    private var onMassLockedOrUnlocked: ((massID: Int) -> Unit)? = null,
     private var onMassClicked: ((massID: Int) -> Unit)? = null
 ) : GLSurfaceView(mainActivity) {
 
@@ -56,7 +55,7 @@ class MyGLSurfaceView(
         renderer = MyGLRenderer(
             mainActivity,
             this,
-            labelsView
+            labelsView, onMassLockedOrUnlocked = onMassLockedOrUnlocked
         ) {
             onSurfaceCreated?.let { it() }
         }
@@ -75,19 +74,17 @@ class MyGLSurfaceView(
         private val renderer: MyGLRenderer
     ) :
         OnScaleGestureListener {
-        private var sizeCoef: Float = 1f
         private var scaleFocusX = 0f
         private var scaleFocusY = 0f
+        var scaleDistance = 0f
+        var initialZoom = 0f
         override fun onScale(arg0: ScaleGestureDetector): Boolean {
             lastScaleTime = System.currentTimeMillis()
-            Log.d("tqpt", "scale : ${arg0.scaleFactor}")
-            val scale: Float = arg0.scaleFactor * sizeCoef
-            sizeCoef = scale
-            val delta = if (arg0.scaleFactor > 1f) -0.5f else 0.5f
-            renderer.zoom += delta
-            myGLSurfaceView.requestRender()
-
-
+            if (scaleDistance > 0) {
+                Log.d("tqpt", "scale2 : ${arg0.currentSpan / scaleDistance}")
+                renderer.zoom = initialZoom / (arg0.currentSpan / scaleDistance)
+                myGLSurfaceView.requestRender()
+            }
             return true
         }
 
@@ -96,6 +93,8 @@ class MyGLSurfaceView(
             myGLSurfaceView.invalidate()
             scaleFocusX = arg0.focusX
             scaleFocusY = arg0.focusY
+            scaleDistance = arg0.currentSpan
+            initialZoom = renderer.zoom
             return true
         }
 
@@ -125,31 +124,24 @@ class MyGLSurfaceView(
         val x: Float = e.x
         val y: Float = e.y
 
-        setLockMass(-1)
         when (e.action) {
             MotionEvent.ACTION_DOWN -> {
                 val selected = renderer.findMassAt2DXY(x, y)
                 onMassClicked?.let { it(selected) }
             }
             MotionEvent.ACTION_MOVE -> {
-
                 val dx: Float = x - previousX
                 val dy: Float = y - previousY
+                if (kotlin.math.abs(dx) > 10 || kotlin.math.abs(dy) > 10)
+                    setLockMass(-1)
+
 
 
                 if (e.pointerCount == 1) {
-//                    // reverse direction of rotation above the mid-line
-//                    if (y > height / 2) {
-//                        dx *= -1
-//                    }
-//
-//                    // reverse direction of rotation to left of the mid-line
-//                    if (x < width / 2) {
-//                        dy *= -1
-//                    }
+                    val r0 = ((Math.PI * zoom / 180.0f) * (1.0f / height)).toFloat()
 
-                    renderer.panAzimuth -= dx * TOUCH_SCALE_FACTOR
-                    renderer.panAltitude += dy * TOUCH_SCALE_FACTOR
+                    renderer.panAzimuth -= dx * r0
+                    renderer.panAltitude += dy * r0
 
                     renderer.panAltitude = max(
                         -(Math.PI / 2).toFloat(),
@@ -169,8 +161,9 @@ class MyGLSurfaceView(
         renderer.setCenter(lookAtAzimuth, lookAtAltitude)
     }
 
-
     fun setLockMass(mass: Int) {
+        if (renderer.lockedMass == mass)
+            return
         renderer.lockedMass = mass
         requestRender()
     }

@@ -5,6 +5,10 @@ import android.app.Activity
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import com.daftar.taqwimplanetarium.general.initialViewAngle
+import com.daftar.taqwimplanetarium.general.massTouchSizeInPixels
+import com.daftar.taqwimplanetarium.general.maxViewAngle
+import com.daftar.taqwimplanetarium.general.minViewAngle
 import com.daftar.taqwimplanetarium.objects.Horizon
 import com.daftar.taqwimplanetarium.views.LabelsView
 import com.daftar.taqwimplanetarium.objects.SkyGrid
@@ -21,18 +25,21 @@ class MyGLRenderer(
     private val mainActivity: Activity,
     private val surfaceView: MyGLSurfaceView,
     private val labelsView: LabelsView,
+    private var onMassLockedOrUnlocked: ((massID: Int) -> Unit)? = null,
     private val onSurfaceCreatedListener: (() -> Unit)?
 ) : GLSurfaceView.Renderer {
-    private val skyRadius = 10f
+    val skyRadius = 10f
     private val sunVisibleRadius = skyRadius * Math.PI.toFloat() * 0.5f / 180f
 
     var lockedMass: Int = -1
         set(value) {
             field = value
+            onMassLockedOrUnlocked?.let {
+                it(value)
+            }
             if (lockedMass == -1 || lockedMass > masses.size - 1)
                 return
-            panAzimuth = masses[lockedMass].azimuth
-            panAltitude = masses[lockedMass].altitude
+            setCenter(masses[lockedMass].azimuth, masses[lockedMass].altitude)
         }
 
     private var width: Int = 100
@@ -47,9 +54,9 @@ class MyGLRenderer(
     @Volatile
     var panAzimuth: Float = 0.1f
     var panAltitude: Float = Math.PI.toFloat() / 4f
-    var zoom: Float = 45f
+    var zoom: Float = initialViewAngle
         set(value) {
-            field = min(45f, max(1f, value))
+            field = min(maxViewAngle, max(minViewAngle, value))
             updateViewport(this.width, this.height)
         }
 
@@ -231,7 +238,7 @@ class MyGLRenderer(
         val yH = height - y
         for (m in 0 until masses.size) {
             val mass = masses[m]
-            if (abs(x - mass.last2Dx) < 10 && abs(yH - mass.last2Dy) < 10)
+            if (abs(x - mass.last2Dx) < massTouchSizeInPixels && abs(yH - mass.last2Dy) < massTouchSizeInPixels)
                 return m
         }
         return -1

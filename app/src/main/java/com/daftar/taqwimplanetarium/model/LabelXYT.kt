@@ -5,6 +5,7 @@ class LabelXYT(
     var y: Float,
     var z: Float,
     var label: String,
+    var color: Int
 ) {
     var x2d: Float = 0f
     var y2d: Float = 0f

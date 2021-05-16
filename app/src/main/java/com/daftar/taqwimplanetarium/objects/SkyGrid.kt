@@ -99,8 +99,14 @@ class SkyGrid(
                         b != 0 && a % 90 == 0 -> "$b"
                         else -> ""
                     }
+                    val color = when {
+                        a == 0 && b == 0 -> 0
+                        b == 0 -> 0
+                        b != 0 && a % 90 == 0 -> 1
+                        else -> 1
+                    }
                     if (label.isNotEmpty()) {
-                        labelsView.list.add(LabelXYT(x, y, z, label))
+                        labelsView.list.add(LabelXYT(x, y, z, label, color))
                     }
                 }
         // horizontal lines

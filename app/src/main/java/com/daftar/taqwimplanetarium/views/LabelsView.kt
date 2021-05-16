@@ -27,7 +27,7 @@ class LabelsView @JvmOverloads constructor(
             textPaint.color = Color.BLACK
         else
             textPaint.color = Color.WHITE
-        textPaint.textSize = max(20f, 8f * value)
+        textPaint.textSize = max(20f, 14f * value)
         textPaint.typeface = Typeface.MONOSPACE
 
     }
@@ -35,12 +35,20 @@ class LabelsView @JvmOverloads constructor(
     override fun onDraw(canvas: Canvas?) {
 
         canvas?.let {
-            if (skyLightness > 0.6)
-                textPaint.color = Color.DKGRAY
-            else
-                textPaint.color = Color.WHITE
             for (label in list)
                 if (label.z2d > 0 && label.x2d > 0 && label.z2d < 1 && label.x2d < width) {
+                    if (skyLightness > 0.6) {
+                        if (label.color == 0)
+                            textPaint.color = Color.parseColor("#005000");
+                        else
+                            textPaint.color = Color.parseColor("#a00000");
+                    } else {
+                        if (label.color == 0)
+                            textPaint.color = Color.parseColor("#ffffff");
+                        else
+                            textPaint.color = Color.parseColor("#ffffff");
+                    }
+
                     it.drawText(
                         label.label,
                         label.x2d,

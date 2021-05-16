@@ -7,6 +7,7 @@ import com.daftar.taqwimplanetarium.views.COORDS_PER_VERTEX
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -122,15 +123,17 @@ class Sphere(
         val distanceToSun = sqrt(
             ((sunRealX - sphereX) * (sunRealX - sphereX) +
                     (sunRealY - sphereY) * (sunRealY - sphereY) +
-                    (sunRealZ - sphereZ) * (sunRealZ - sphereZ).toDouble())
-        ).toFloat()
-        val minDistanceToSun = distanceToSun - sphereR
+                    (sunRealZ - sphereZ) * (sunRealZ - sphereZ))
+        )
+        val minDistanceToSun = abs(distanceToSun - sphereR)
 
 
-        for (b in -90..90 step stp)
+        val localStp = if (isThisMoon) 5 else stp
+
+        for (b in -90..90 step localStp)
             for (a in 0 until 360 step stp) {
                 val alphaV = Math.PI * b / 180.0f
-                val alphaVN = Math.PI * (b + stp) / 180.0f
+                val alphaVN = Math.PI * (b + localStp) / 180.0f
 
                 val r = sphereR * cos(alphaV).toFloat()
                 val rN = sphereR * cos(alphaVN).toFloat()
@@ -156,22 +159,34 @@ class Sphere(
                 val yn2 = sphereY + rN * sin(alpha2).toFloat()
                 val p2NextRing = arrayOf(xn2, yn2, zN)
 
-                val ds = 1 - (distanceFromPointToSun(p1) - minDistanceToSun) / sphereR
 
                 // first face
                 triangleCoords.addAll(p1)
                 triangleCoords.addAll(p2)
                 triangleCoords.addAll(p1NextRing)
 
-                triangleColors.add(ds)
+                if (isThisMoon) {
+                    val ds = 1 - (distanceFromPointToSun(p1) - minDistanceToSun) / (1.1f * sphereR)
+                    if (b > 80) {
+                        if (a > 1500) {
+                            triangleColors.add(0f)
+                        }
+                    }
+                    triangleColors.add(ds)
+                } else
+                    triangleColors.add(sphereColor[0])
 
-                val ds2 = 1 - (distanceFromPointToSun(p2) - minDistanceToSun) / sphereR
 
                 // second face
                 triangleCoords.addAll(p2)
                 triangleCoords.addAll(p1NextRing)
                 triangleCoords.addAll(p2NextRing)
-                triangleColors.add(ds2)
+
+                if (isThisMoon) {
+                    val ds2 = 1 - (distanceFromPointToSun(p2) - minDistanceToSun) / (1.1f * sphereR)
+                    triangleColors.add(ds2)
+                } else
+                    triangleColors.add(sphereColor[0])
             }
 
         vertexCount = triangleCoords.size / COORDS_PER_VERTEX
@@ -196,8 +211,8 @@ class Sphere(
         return sqrt(
             ((sunRealX - p1[0]) * (sunRealX - p1[0]) +
                     (sunRealY - p1[1]) * (sunRealY - p1[1]) +
-                    (sunRealZ - p1[2]) * (sunRealZ - p1[2])).toDouble()
-        ).toFloat()
+                    (sunRealZ - p1[2]) * (sunRealZ - p1[2]))
+        )
     }
 
     // Set color with red, green, blue and alpha (opacity) values
@@ -294,6 +309,10 @@ class Sphere(
     fun setAzimuthAltitude(azimuth: Float, altitude: Float) {
         this.azimuth = azimuth
         this.altitude = altitude
+        val localR = spaceR * cos(altitude)
+        sphereX = spaceX + localR * cos(-azimuth)
+        sphereY = spaceY + localR * sin(-azimuth)
+        sphereZ = spaceZ + spaceR * sin(altitude)
         flagRecreationAfterDraw = true
     }
 

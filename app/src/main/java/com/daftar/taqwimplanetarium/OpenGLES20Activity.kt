@@ -12,22 +12,12 @@ import com.daftar.taqwimplanetarium.views.TaqwimPlanetariumView
 class OpenGLES20Activity : Activity() {
 
     private lateinit var taqwimPlanetariumView: TaqwimPlanetariumView
-    var sunAzimuth: Float = (Math.PI / 16).toFloat()
-    var sunAltitude: Float = (Math.PI / 3).toFloat()
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
         taqwimPlanetariumView = findViewById<TaqwimPlanetariumView>(R.id.taqwimPlanetariumView)
-//        Timer("SettingUp", false).schedule(50, 50) {
-//            runOnUiThread {
-//                sunAltitude -= 0.003f
-//                sunAzimuth += 0.003f
-//                openGlSkyView.setMassAzimuthAltitude(MASS_SUN, sunAzimuth, sunAltitude)
-//            }
-//
-//        }
     }
 
     fun setCenterClicked(view: View) {
