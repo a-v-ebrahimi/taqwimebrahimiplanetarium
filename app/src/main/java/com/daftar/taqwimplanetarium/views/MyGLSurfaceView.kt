@@ -4,11 +4,12 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.opengl.GLSurfaceView
-import android.util.Log
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
 import com.daftar.taqwimplanetarium.objects.Sphere
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
@@ -22,7 +23,7 @@ var lastScaleTime = 0L
 class MyGLSurfaceView(
     mainActivity: Activity,
     labelsView: LabelsView,
-    private var onMassLockedOrUnlocked: ((massID: Int) -> Unit)? = null,
+    onMassLockedOrUnlocked: ((massID: Int) -> Unit)? = null,
     private var onMassClicked: ((massID: Int) -> Unit)? = null
 ) : GLSurfaceView(mainActivity) {
 
@@ -76,8 +77,8 @@ class MyGLSurfaceView(
         OnScaleGestureListener {
         private var scaleFocusX = 0f
         private var scaleFocusY = 0f
-        var scaleDistance = 0f
-        var initialZoom = 0f
+        private var scaleDistance = 0f
+        private var initialZoom = 0f
         override fun onScale(arg0: ScaleGestureDetector): Boolean {
             lastScaleTime = System.currentTimeMillis()
             if (scaleDistance > 0) {
@@ -104,16 +105,117 @@ class MyGLSurfaceView(
         }
     }
 
-    private var mDetector = ScaleGestureDetector(
+    class LocalGestureDetector(
+        private val myGLSurfaceView: MyGLSurfaceView,
+        private val renderer: MyGLRenderer
+    ) : GestureDetector.OnGestureListener {
+        override fun onDown(e: MotionEvent?): Boolean {
+            return false
+        }
+
+        override fun onShowPress(e: MotionEvent?) {
+
+        }
+
+        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+            return false
+        }
+
+        override fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
+
+            val r0 =
+                ((Math.PI * myGLSurfaceView.zoom / 180.0f) * (1.0f / myGLSurfaceView.height)).toFloat()
+
+            val targetAzimuth = renderer.panAzimuth + distanceX * r0
+            var targetAltitude = renderer.panAltitude - distanceY * r0
+
+            targetAltitude = max(
+                -(Math.PI / 2).toFloat(),
+                min(targetAltitude, (Math.PI / 2).toFloat())
+            )
+
+            renderer.panAzimuth = targetAzimuth
+            renderer.panAltitude = targetAltitude
+            myGLSurfaceView.requestRender()
+
+            return false
+        }
+
+        override fun onLongPress(e: MotionEvent?) {
+
+        }
+
+        override fun onFling(
+            e1: MotionEvent?,
+            e2: MotionEvent?,
+            velocityX: Float,
+            velocityY: Float
+        ): Boolean {
+            val x: Float = e2!!.x
+            val y: Float = e2.y
+            var dx: Float = x - e1!!.x
+            var dy: Float = y - e1.y
+
+            if (abs(velocityX) < 1500)
+                dx = 0f
+            if (abs(velocityY) < 1500)
+                dy = 0f
+
+            if (dx == 0f && dy == 0f)
+                return false
+            dx *= abs(velocityX) / 5000f
+            dy *= abs(velocityY) / 5000f
+            val r0 =
+                ((Math.PI * myGLSurfaceView.zoom / 180.0f) * (1.0f / myGLSurfaceView.height)).toFloat()
+
+            val startAzimuth = renderer.panAzimuth
+            val startAltitude = renderer.panAltitude
+            val targetAzimuth = renderer.panAzimuth - dx * r0
+            var targetAltitude = renderer.panAltitude + dy * r0
+
+            targetAltitude = max(
+                -(Math.PI / 2).toFloat(),
+                min(targetAltitude, (Math.PI / 2).toFloat())
+            )
+
+            val deltaAz = (targetAzimuth - renderer.panAzimuth) / 100f
+            val deltaAt = (targetAltitude - renderer.panAltitude) / 100f
+
+            ValueAnimator.ofFloat(0f, 100f).apply {
+                duration = 500
+                start()
+            }.addUpdateListener {
+                renderer.panAzimuth = startAzimuth + deltaAz * it.animatedValue as Float
+                renderer.panAltitude = startAltitude + deltaAt * it.animatedValue as Float
+                myGLSurfaceView.requestRender()
+            }
+
+
+
+            return false
+        }
+
+    }
+
+    private var scaleGestureDetector = ScaleGestureDetector(
         context,
         ScaleDetectorListener(this, renderer).apply {
 
         }
     )
 
+    private var gestureDetector =
+        GestureDetector(context, LocalGestureDetector(this, renderer).apply { })
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean {
-        mDetector.onTouchEvent(e)
+        scaleGestureDetector.onTouchEvent(e)
+        gestureDetector.onTouchEvent(e)
         if (busyScaling || System.currentTimeMillis() - lastScaleTime < 500)
             return true
         // MotionEvent reports input details from the touch screen
@@ -129,25 +231,7 @@ class MyGLSurfaceView(
                 onMassClicked?.let { it(selected) }
             }
             MotionEvent.ACTION_MOVE -> {
-                val dx: Float = x - previousX
-                val dy: Float = y - previousY
-                if (kotlin.math.abs(dx) > 10 || kotlin.math.abs(dy) > 10)
-                    setLockMass(-1)
 
-
-
-                if (e.pointerCount == 1) {
-                    val r0 = ((Math.PI * zoom / 180.0f) * (1.0f / height)).toFloat()
-
-                    renderer.panAzimuth -= dx * r0
-                    renderer.panAltitude += dy * r0
-
-                    renderer.panAltitude = max(
-                        -(Math.PI / 2).toFloat(),
-                        min(renderer.panAltitude, (Math.PI / 2).toFloat())
-                    )
-                }
-                requestRender()
             }
         }
 
