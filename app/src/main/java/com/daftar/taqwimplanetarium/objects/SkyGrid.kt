@@ -209,8 +209,6 @@ class SkyGrid(
             label.x2d = output[0]
             label.y2d = output[1]
             label.z2d = output[2]
-//            if ((label.label=="10" || label.label=="190") && label.z2d<1)
-//            Log.d("tqpt",label.toString())
         }
         mainActivity.runOnUiThread {
             labelsView.invalidate()

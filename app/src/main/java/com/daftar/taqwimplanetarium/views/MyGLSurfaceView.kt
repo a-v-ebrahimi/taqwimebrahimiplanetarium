@@ -81,7 +81,6 @@ class MyGLSurfaceView(
         override fun onScale(arg0: ScaleGestureDetector): Boolean {
             lastScaleTime = System.currentTimeMillis()
             if (scaleDistance > 0) {
-                Log.d("tqpt", "scale2 : ${arg0.currentSpan / scaleDistance}")
                 renderer.zoom = initialZoom / (arg0.currentSpan / scaleDistance)
                 myGLSurfaceView.requestRender()
             }

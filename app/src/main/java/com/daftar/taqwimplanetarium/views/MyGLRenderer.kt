@@ -131,6 +131,7 @@ class MyGLRenderer(
         )
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
+
         // Set the camera position (View matrix)
         val localSkyRadius = skyRadius * cos(panAltitude)
         val eyeTargetX = localSkyRadius * cos(-panAzimuth)

@@ -128,12 +128,10 @@ class Sphere(
         val minDistanceToSun = abs(distanceToSun - sphereR)
 
 
-        val localStp = if (isThisMoon) 5 else stp
-
-        for (b in -90..90 step localStp)
+        for (b in -90..90 step stp)
             for (a in 0 until 360 step stp) {
                 val alphaV = Math.PI * b / 180.0f
-                val alphaVN = Math.PI * (b + localStp) / 180.0f
+                val alphaVN = Math.PI * (b + stp) / 180.0f
 
                 val r = sphereR * cos(alphaV).toFloat()
                 val rN = sphereR * cos(alphaVN).toFloat()
@@ -265,7 +263,6 @@ class Sphere(
             )
 
             if (isThisMoon) {
-                Log.d("tqpt", "")
                 for (v in 0 until (vertexCount / 3)) {
                     mColorHandle =
                         GLES20.glGetUniformLocation(mProgram, "vColor").also { colorHandle ->
