@@ -35,7 +35,7 @@ public class Flinger {
     }
 
     private FlingListener listener;
-    private int updatesPerSecond = 20;
+    private int updatesPerSecond = 64;
     private int timeIntervalMillis = 1000 / updatesPerSecond;
     private ScheduledExecutorService executor;
     private ScheduledFuture<?> flingTask;
