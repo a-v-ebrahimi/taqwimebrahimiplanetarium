@@ -59,6 +59,7 @@ public class MapMover implements
         final float pixelsToRadians = model.getZoom() / sizeTimesRadiansToDegrees;
         model.setPanAzimuth(model.getPanAzimuth() - xPixels * pixelsToRadians);
         model.setPanAltitude(model.getPanAltitude() + yPixels * pixelsToRadians);
+
         controllerGroup.requestRender();
         return true;
     }

@@ -13,6 +13,7 @@ import com.daftar.taqwimplanetarium.objects.Horizon
 import com.daftar.taqwimplanetarium.views.LabelsView
 import com.daftar.taqwimplanetarium.objects.SkyGrid
 import com.daftar.taqwimplanetarium.objects.Sphere
+import com.daftar.taqwimplanetarium.util.MathUtil
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.*
@@ -53,7 +54,19 @@ class MyGLRenderer(
 
     @Volatile
     var panAzimuth: Float = 0.1f
+
     var panAltitude: Float = Math.PI.toFloat() / 4f
+        set(value) {
+            field =
+                max(
+                    min(
+                        value,
+                        0.05f + Math.PI.toFloat() / 2.0f - zoom * MathUtil.DEGREES_TO_RADIANS / 2f
+                    ),
+                    -Math.PI.toFloat() / 2.0f + zoom * MathUtil.DEGREES_TO_RADIANS / 2f
+                )
+        }
+
     var zoom: Float = initialViewAngle
         set(value) {
             field = min(maxViewAngle, max(minViewAngle, value))
