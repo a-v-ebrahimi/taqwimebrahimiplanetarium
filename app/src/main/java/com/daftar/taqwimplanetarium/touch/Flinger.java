@@ -35,7 +35,7 @@ public class Flinger {
     }
 
     private FlingListener listener;
-    private int updatesPerSecond = 64;
+    private int updatesPerSecond = 96;
     private int timeIntervalMillis = 1000 / updatesPerSecond;
     private ScheduledExecutorService executor;
     private ScheduledFuture<?> flingTask;
@@ -49,7 +49,7 @@ public class Flinger {
         Log.d(TAG, "Doing the fling");
         class PositionUpdater implements Runnable {
             private float myVelocityX, myVelocityY;
-            private float decelFactor = 1.1f;
+            private float decelFactor = 1.05f;
             private float TOL = 10;
 
             public PositionUpdater(float velocityX, float velocityY) {
