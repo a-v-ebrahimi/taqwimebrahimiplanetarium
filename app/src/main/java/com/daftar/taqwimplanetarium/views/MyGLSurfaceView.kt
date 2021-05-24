@@ -9,10 +9,16 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ScaleGestureDetector.OnScaleGestureListener
 import com.daftar.taqwimplanetarium.objects.Sphere
+import com.daftar.taqwimplanetarium.touch.DragRotateZoomGestureDetector
+import com.daftar.taqwimplanetarium.touch.GestureInterpreter
+import com.daftar.taqwimplanetarium.touch.MapMover
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+
+// https://github.com/sky-map-team/stardroid/blob/be8f23cc7af6966cb9eb29a91e8c669ba874a528/app/src/main/java/com/google/android/stardroid/touch/Flinger.java
+// https://github.com/sky-map-team/stardroid/blob/be8f23cc7af6966cb9eb29a91e8c669ba874a528/app/src/main/java/com/google/android/stardroid/touch/GestureInterpreter.java
 
 const val MASS_SUN = 0
 const val MASS_MOON = 1
@@ -28,6 +34,8 @@ class MyGLSurfaceView(
 ) : GLSurfaceView(mainActivity) {
 
 
+    private var gestureDetector: GestureDetector
+    private var dragZoomRotateDetector: DragRotateZoomGestureDetector
     var onSurfaceCreated: (() -> Unit)? = null
 
     var zoom: Float
@@ -36,14 +44,8 @@ class MyGLSurfaceView(
         }
         set(value) {
             val target = min(45f, max(1f, value))
-            ValueAnimator.ofFloat(zoom, target).apply {
-                duration = 500
-                start()
-            }.addUpdateListener {
-                renderer.zoom = it.animatedValue as Float
-                requestRender()
-            }
-
+            renderer.zoom = target
+            requestRender()
         }
 
 
@@ -65,6 +67,14 @@ class MyGLSurfaceView(
         setRenderer(renderer)
         renderMode = RENDERMODE_WHEN_DIRTY
 
+        val mapMover = MapMover(renderer, this, context)
+
+        gestureDetector = GestureDetector(
+            context, GestureInterpreter(
+                mapMover
+            )
+        )
+        dragZoomRotateDetector = DragRotateZoomGestureDetector(mapMover)
     }
 
     private var previousX: Float = 0f
@@ -209,35 +219,16 @@ class MyGLSurfaceView(
         }
     )
 
-    private var gestureDetector =
-        GestureDetector(context, LocalGestureDetector(this, renderer).apply { })
-
     @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(e: MotionEvent): Boolean {
-        scaleGestureDetector.onTouchEvent(e)
-        gestureDetector.onTouchEvent(e)
-        if (busyScaling || System.currentTimeMillis() - lastScaleTime < 500)
-            return true
-        // MotionEvent reports input details from the touch screen
-        // and other input controls. In this case, you are only
-        // interested in events where the touch position changed.
-
-        val x: Float = e.x
-        val y: Float = e.y
-
-        when (e.action) {
-            MotionEvent.ACTION_DOWN -> {
-                val selected = renderer.findMassAt2DXY(x, y)
-                onMassClicked?.let { it(selected) }
-            }
-            MotionEvent.ACTION_MOVE -> {
-
-            }
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        var eventAbsorbed = false
+        if (gestureDetector.onTouchEvent(event)) {
+            eventAbsorbed = true
         }
-
-        previousX = x
-        previousY = y
-        return true
+        if (dragZoomRotateDetector.onTouchEvent(event)) {
+            eventAbsorbed = true
+        }
+        return eventAbsorbed
     }
 
     fun setCenter(lookAtAzimuth: Float, lookAtAltitude: Float) {
