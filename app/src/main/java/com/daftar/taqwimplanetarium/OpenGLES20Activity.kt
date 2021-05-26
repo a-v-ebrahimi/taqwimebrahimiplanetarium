@@ -11,13 +11,14 @@ import com.daftar.taqwimplanetarium.views.TaqwimPlanetariumView
 @Suppress("UNUSED_PARAMETER")
 class OpenGLES20Activity : Activity() {
 
-    private lateinit var taqwimPlanetariumView: TaqwimPlanetariumView
+    private lateinit var taqwimPlanetariumView: com.daftar.taqwimplanetarium.views.TaqwimPlanetariumView
 
     public override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_main)
-        taqwimPlanetariumView = findViewById<TaqwimPlanetariumView>(R.id.taqwimPlanetariumView)
+        taqwimPlanetariumView =
+            findViewById<com.daftar.taqwimplanetarium.views.TaqwimPlanetariumView>(R.id.taqwimPlanetariumView)
     }
 
     fun setCenterClicked(view: View) {
@@ -31,7 +32,7 @@ class OpenGLES20Activity : Activity() {
     @SuppressLint("SetTextI18n")
     fun setLockMass(view: View) {
         if (taqwimPlanetariumView.openGlSkyView.getLockedMass() == -1) {
-            taqwimPlanetariumView.openGlSkyView.setLockMass(MASS_SUN)
+            taqwimPlanetariumView.openGlSkyView.setLockMass(com.daftar.taqwimplanetarium.views.MASS_SUN)
             (findViewById<Button>(R.id.btnSetLockMass)).text = "Locked to Sun"
         } else {
             taqwimPlanetariumView.openGlSkyView.setLockMass(-1)

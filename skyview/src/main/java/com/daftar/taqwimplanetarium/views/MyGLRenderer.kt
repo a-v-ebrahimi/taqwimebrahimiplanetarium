@@ -10,7 +10,6 @@ import com.daftar.taqwimplanetarium.general.massTouchSizeInPixels
 import com.daftar.taqwimplanetarium.general.maxViewAngle
 import com.daftar.taqwimplanetarium.general.minViewAngle
 import com.daftar.taqwimplanetarium.objects.Horizon
-import com.daftar.taqwimplanetarium.views.LabelsView
 import com.daftar.taqwimplanetarium.objects.SkyGrid
 import com.daftar.taqwimplanetarium.objects.Sphere
 import com.daftar.taqwimplanetarium.util.MathUtil

@@ -34,9 +34,9 @@ class TaqwimPlanetariumView @JvmOverloads constructor(
             onMassLockedOrUnlocked = {
                 Log.d("tqpt", "Mass Locked : $it")
                 if (it == -1) {
-                    infoPanel.visibility = View.GONE
+                    infoPanel.visibility = GONE
                 } else {
-                    infoPanel.visibility = View.VISIBLE
+                    infoPanel.visibility = VISIBLE
                 }
             }
         ) {

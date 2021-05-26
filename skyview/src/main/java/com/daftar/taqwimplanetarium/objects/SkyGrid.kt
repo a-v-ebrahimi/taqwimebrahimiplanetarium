@@ -4,6 +4,7 @@ import android.app.Activity
 import android.opengl.GLES20
 import android.opengl.GLU
 import com.daftar.taqwimplanetarium.model.LabelXYT
+import com.daftar.taqwimplanetarium.model.PointAndAltitude
 import com.daftar.taqwimplanetarium.views.COORDS_PER_VERTEX
 import com.daftar.taqwimplanetarium.views.LabelsView
 import java.nio.ByteBuffer
@@ -25,6 +26,7 @@ class SkyGrid(
 
     private var lineCoords: MutableList<Float> = mutableListOf()
     private var lineColors: MutableList<Int> = mutableListOf()
+    private var lineStartPoints: MutableList<PointAndAltitude> = mutableListOf()
 
     private val vertexShaderCode =
     // This matrix member variable provides a hook to manipulate
@@ -131,6 +133,7 @@ class SkyGrid(
                 lineCoords.addAll(p1)
                 lineCoords.addAll(p2)
                 lineColors.add(1)
+                lineStartPoints.add(PointAndAltitude(x, y, z, b))
 
             }
 
@@ -145,20 +148,20 @@ class SkyGrid(
                 val z = skyRadius * sin(alphaV).toFloat()
                 val zN = skyRadius * sin(alphaVN).toFloat()
 
-                    val alpha = Math.PI * a / 180.0
-                    val x = r * cos(alpha).toFloat()
-                    val y = r * sin(alpha).toFloat()
-                    val p1 = arrayOf(x, y, z)
+                val alpha = Math.PI * a / 180.0
+                val x = r * cos(alpha).toFloat()
+                val y = r * sin(alpha).toFloat()
+                val p1 = arrayOf(x, y, z)
 
-                    val xn = rN * cos(alpha).toFloat()
-                    val yn = rN * sin(alpha).toFloat()
-                    val pNextRing = arrayOf(xn, yn, zN)
+                val xn = rN * cos(alpha).toFloat()
+                val yn = rN * sin(alpha).toFloat()
+                val pNextRing = arrayOf(xn, yn, zN)
 
-                    lineCoords.addAll(p1)
-                    lineCoords.addAll(pNextRing)
-                    lineColors.add(2)
+                lineCoords.addAll(p1)
+                lineCoords.addAll(pNextRing)
+                lineColors.add(2)
 
-                }
+            }
 
         vertexCount = lineCoords.size / COORDS_PER_VERTEX
         vertexBuffer =
@@ -249,6 +252,18 @@ class SkyGrid(
                 }
 
                 GLES20.glDrawArrays(GLES20.GL_LINES, v * 2, 2)
+
+//                val output = floatArrayOf(0f, 0f, 0f)
+
+//                for (line in lineStartPoints) {
+//
+//                    GLU.gluProject(
+//                        line.x,line.y,line.z, modelViewMatrix, 0, projectionMatrix, 0, view, 0,
+//                        output, 0
+//                    )
+//                    line._2DX=output[0]
+//                    line._2DY=output[1]
+//                }
             }
 
 

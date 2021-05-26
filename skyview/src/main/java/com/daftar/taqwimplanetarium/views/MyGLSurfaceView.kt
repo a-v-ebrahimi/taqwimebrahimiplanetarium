@@ -1,6 +1,5 @@
 package com.daftar.taqwimplanetarium.views
 
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.opengl.GLSurfaceView
@@ -12,7 +11,6 @@ import com.daftar.taqwimplanetarium.objects.Sphere
 import com.daftar.taqwimplanetarium.touch.DragRotateZoomGestureDetector
 import com.daftar.taqwimplanetarium.touch.GestureInterpreter
 import com.daftar.taqwimplanetarium.touch.MapMover
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
